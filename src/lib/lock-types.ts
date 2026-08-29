@@ -23,6 +23,12 @@ export const lockVerdictSchema = z.object({
    * fall back to the schema that predates it.
    */
   options: z.array(z.string().min(1).max(48)).max(4).nullable().default(null),
+  /**
+   * Which interaction the next question deserves: free text, a set of stances,
+   * or a degree. Nullable for the same reason as `options`; the interface
+   * falls back to text.
+   */
+  input_kind: z.enum(["text", "choice", "scale"]).nullable().default(null),
 });
 
 export type LockVerdict = z.infer<typeof lockVerdictSchema>;

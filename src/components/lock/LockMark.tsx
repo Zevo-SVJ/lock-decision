@@ -1,25 +1,22 @@
-/** The wordmark. Small, fixed, never decorative. */
-export function LockMark() {
+import { LockGlyph } from "@/components/lock/LockGlyph";
+
+/**
+ * The wordmark, and the only progress indicator in the product.
+ *
+ * The shackle closes as the system approaches certainty, so position in the
+ * journey is read off the mark itself rather than a bar or a step count.
+ */
+export function LockMark({
+  progress = 0,
+  pulsing = false,
+}: {
+  progress?: number;
+  pulsing?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2.5">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
-        <path
-          d="M8 10V7a4 4 0 0 1 8 0v3"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        <rect
-          x="4.75"
-          y="10"
-          width="14.5"
-          height="9.5"
-          rx="3.1"
-          stroke="currentColor"
-          strokeWidth="1.8"
-        />
-      </svg>
-      <span className="text-[0.6875rem] font-medium tracking-[0.42em] uppercase">Lock</span>
+    <div className="lock-wordmark" data-pulsing={pulsing || undefined}>
+      <LockGlyph progress={progress} size={15} className="lock-wordmark-glyph" />
+      <span className="lock-wordmark-text">Lock</span>
     </div>
   );
 }

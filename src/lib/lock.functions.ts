@@ -27,8 +27,13 @@ Rules:
 - verdict: "lock" (ready to commit), "hold" (needs more clarity), "unlock" (should not commit yet), "reject".
 - confidence is 0..1.
 - next_state must be one of the journey states or null.
-- "options": when the followup question has a small set of honest stances, give 2-4 of them, each max 4 words,
-  written in the user's first person. Otherwise null. Never use them for open questions that need the user's own words.
+- Choose the interaction the question deserves and put it in "input_kind":
+  - "choice" when a small set of honest stances covers the answer. Put 2-4 of them in "options",
+    each max 4 words, written in the user's first person.
+  - "scale" when you are asking about degree, certainty or readiness. Phrase the question so a
+    number from 1 to 10 answers it. "options" must be null.
+  - "text" when only the user's own words will do. "options" must be null.
+  Prefer "choice" or "scale" when they genuinely fit — they are faster and sharper than typing.
 Reply with JSON only.`;
 
 function buildUserPrompt(data: EvaluateInput): string {
@@ -65,13 +70,17 @@ const baseRequired = ["verdict", "reason", "action", "confidence", "next_state",
 const extendedSchema = {
   type: "object",
   additionalProperties: false,
-  required: [...baseRequired, "options"],
+  required: [...baseRequired, "options", "input_kind"],
   properties: {
     ...baseProperties,
     options: {
       type: ["array", "null"],
       items: { type: "string" },
       maxItems: 4,
+    },
+    input_kind: {
+      type: ["string", "null"],
+      enum: ["text", "choice", "scale", null],
     },
   },
 } as const;

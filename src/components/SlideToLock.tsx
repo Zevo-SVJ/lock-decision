@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { LockGlyph, type LockGlyphHandle } from "@/components/lock/LockGlyph";
 import { prefersReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-type LockPhase = "idle" | "engaged" | "returning" | "locked";
-/** How the thumb is currently being driven. */
+type ControlPhase = "idle" | "engaged" | "returning" | "sealing";
+/** How the knob is currently being driven. */
 type DriveMode = "free" | "drag" | "key";
 
 type Props = {
@@ -12,21 +13,27 @@ type Props = {
   label?: string;
   /** Hint rendered once the gesture completes. */
   confirmedLabel?: string;
-  /** Fired once, after the lock moment has played out. */
+  /** Fired once, after the seal choreography has played out. */
   onConfirm: () => void;
   disabled?: boolean;
   className?: string;
 };
 
-const TRACK_H = 76; // px — comfortable one-thumb target
-const THUMB = 64; // px
-const INSET = 6; // px — thumb inset inside the track
+const TRACK_H = 56; // px — compact, still a comfortable thumb target
+const KNOB = 46; // px
+const INSET = 5; // px — knob inset inside the track
 
 /** Travel fraction at which the gesture commits. Effectively "the far end". */
 const COMMIT_AT = 0.985;
-/** Where the final zone begins to pull the thumb in. */
+/** Where the final zone begins to draw the knob in. */
 const MAGNET_FROM = 0.86;
 const MAGNET_STRENGTH = 0.22;
+
+/**
+ * Total seal choreography: the shackle snaps, the control settles (320ms), one
+ * pass of light crosses the glass (60-360ms), then the state resolves.
+ */
+const SEAL_MS = 380;
 
 const SPRINGS: Record<DriveMode, { k: number; damping: number }> = {
   // Stiff enough to sit under the finger, soft enough to carry mass.
@@ -43,14 +50,15 @@ const KEY_PAGE = 0.25;
 /**
  * The Lock control.
  *
- * A pointer-driven physical gesture, not a slider widget: the thumb is a mass
+ * A pointer-driven physical gesture, not a slider widget: the knob is a mass
  * on a spring pulled toward the finger, so it stretches under acceleration,
- * can be held anywhere, reversed, and abandoned. Nothing commits until the
- * thumb actually reaches the far end of the track.
+ * can be held anywhere, reversed, and abandoned. The shackle of the glyph
+ * inside it closes in exact step with travel and re-opens on the way back.
+ * Nothing commits until the knob reaches the far end of the track.
  *
- * Continuous values (position, travel, velocity) are written straight to the
- * DOM as custom properties inside a rAF loop; React state only tracks the four
- * discrete phases, so a drag never re-renders the tree.
+ * Continuous values (position, travel, glyph pose) are written straight to the
+ * DOM inside a rAF loop; React state only tracks the four discrete phases, so
+ * a drag never re-renders the tree.
  */
 export function SlideToLock({
   label = "slide to lock",
@@ -61,7 +69,8 @@ export function SlideToLock({
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const thumbRef = useRef<HTMLDivElement>(null);
+  const knobRef = useRef<HTMLDivElement>(null);
+  const glyphRef = useRef<LockGlyphHandle>(null);
 
   const maxRef = useRef(1);
   const posRef = useRef(0);
@@ -74,9 +83,10 @@ export function SlideToLock({
   const pointerStartRef = useRef(0);
   const grabOffsetRef = useRef(0);
   const hapticMarkRef = useRef(0);
+  const sealTimerRef = useRef<number | null>(null);
   const onConfirmRef = useRef(onConfirm);
 
-  const [phase, setPhase] = useState<LockPhase>("idle");
+  const [phase, setPhase] = useState<ControlPhase>("idle");
   const [travel, setTravel] = useState(0); // coarse — drives aria + caption only
 
   onConfirmRef.current = onConfirm;
@@ -84,7 +94,7 @@ export function SlideToLock({
   const measure = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
-    maxRef.current = Math.max(1, el.clientWidth - THUMB - INSET * 2);
+    maxRef.current = Math.max(1, el.clientWidth - KNOB - INSET * 2);
   }, []);
 
   useEffect(() => {
@@ -99,7 +109,7 @@ export function SlideToLock({
     return () => ro.disconnect();
   }, [measure]);
 
-  /** Light, short haptics — a tick, never a buzz. Silently ignored elsewhere. */
+  /** Short, dry haptics — a tick, never a buzz. Silently ignored elsewhere. */
   const haptic = useCallback((pattern: number | number[]) => {
     if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
     try {
@@ -112,17 +122,22 @@ export function SlideToLock({
   /** Push continuous state to the DOM. Called from the animation loop only. */
   const paint = useCallback((pos: number, stretch: number) => {
     const root = rootRef.current;
-    const thumb = thumbRef.current;
-    if (!root || !thumb) return;
+    const knob = knobRef.current;
+    if (!root || !knob) return;
 
     const p = Math.min(1, Math.max(0, pos / maxRef.current));
     root.style.setProperty("--p", p.toFixed(4));
     root.style.setProperty("--x", `${pos.toFixed(2)}px`);
 
-    const sx = 1 + stretch;
-    const sy = 1 - stretch * 0.62;
-    thumb.style.transform = `translate3d(${pos.toFixed(2)}px, 0, 0) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
-    thumb.style.transformOrigin = stretch >= 0 ? "left center" : "right center";
+    // The knob gains a touch of presence as the final zone approaches.
+    const swell = 1 + Math.max(0, (p - 0.72) / 0.28) * 0.02;
+    const sx = (1 + stretch) * swell;
+    const sy = (1 - stretch * 0.62) * swell;
+    knob.style.transform = `translate3d(${pos.toFixed(2)}px, 0, 0) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
+    knob.style.transformOrigin = stretch >= 0 ? "left center" : "right center";
+
+    // The shackle tracks the finger exactly, in both directions.
+    glyphRef.current?.setProgress(p);
 
     // The ambient ground charges with the gesture — the only global feedback.
     if (typeof document !== "undefined") {
@@ -130,6 +145,17 @@ export function SlideToLock({
     }
   }, []);
 
+  /** While a hand is on the control, the rest of the interface stands down. */
+  const setGesture = useCallback((held: boolean) => {
+    if (typeof document === "undefined") return;
+    if (held) document.documentElement.dataset["gesture"] = "lock";
+    else delete document.documentElement.dataset["gesture"];
+  }, []);
+
+  /**
+   * The seal: the shackle snaps shut, the control stabilises, one pass of
+   * light crosses the glass, then the state resolves. Kept under half a second.
+   */
   const commit = useCallback(() => {
     if (committedRef.current) return;
     committedRef.current = true;
@@ -139,10 +165,11 @@ export function SlideToLock({
     targetRef.current = maxRef.current;
     paint(maxRef.current, 0);
     setTravel(1);
-    setPhase("locked");
-    haptic([12, 46, 26]);
-    window.setTimeout(() => onConfirmRef.current(), 620);
-  }, [haptic, paint]);
+    setPhase("sealing");
+    setGesture(false);
+    haptic([11, 38, 22]);
+    sealTimerRef.current = window.setTimeout(() => onConfirmRef.current(), SEAL_MS);
+  }, [haptic, paint, setGesture]);
 
   /** Semi-implicit spring integration; runs only while something is moving. */
   const tick = useCallback(
@@ -166,11 +193,11 @@ export function SlideToLock({
         velRef.current = 0;
       }
 
-      // Deformation comes from the gap between finger and mass, so the thumb
+      // Deformation comes from the gap between finger and mass, so the knob
       // stretches when yanked and relaxes the instant it catches up.
       const stretch =
         mode === "drag" && !prefersReducedMotion()
-          ? Math.max(-0.07, Math.min(0.11, delta / 240))
+          ? Math.max(-0.06, Math.min(0.09, delta / 260))
           : 0;
       paint(posRef.current, stretch);
 
@@ -207,8 +234,10 @@ export function SlideToLock({
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (sealTimerRef.current !== null) window.clearTimeout(sealTimerRef.current);
       if (typeof document !== "undefined") {
         document.documentElement.style.removeProperty("--charge");
+        delete document.documentElement.dataset["gesture"];
       }
     };
   }, []);
@@ -220,11 +249,11 @@ export function SlideToLock({
     return raw + (1 - raw) * MAGNET_STRENGTH * t;
   }, []);
 
-  /** Two ticks on the way up: the control waking, and the final zone opening. */
+  /** Rising tension: the control wakes, then the final zone opens. */
   const markHaptics = useCallback(
     (fraction: number) => {
-      for (const m of [0.34, 0.72]) {
-        if (fraction >= m && hapticMarkRef.current < m) haptic(6);
+      for (const m of [0.36, 0.74, 0.92]) {
+        if (fraction >= m && hapticMarkRef.current < m) haptic(m > 0.9 ? 8 : 5);
       }
       hapticMarkRef.current = fraction;
     },
@@ -241,7 +270,8 @@ export function SlideToLock({
     modeRef.current = "drag";
     hapticMarkRef.current = posRef.current / maxRef.current;
     setPhase("engaged");
-    haptic(4);
+    setGesture(true);
+    haptic(3);
     run();
   };
 
@@ -257,14 +287,15 @@ export function SlideToLock({
   };
 
   /**
-   * Released short of the end: the thumb falls back, nothing is committed.
+   * Released short of the end: the knob falls back, nothing is committed.
    *
-   * If the finger did reach the end, the gesture stands even when the thumb is
+   * If the finger did reach the end, the gesture stands even when the knob is
    * still a few pixels behind it — the commitment is where the hand went, not
    * where the spring happened to be on the frame the finger lifted.
    */
   const releaseGesture = () => {
     if (committedRef.current || modeRef.current !== "drag") return;
+    setGesture(false);
     if (targetRef.current / maxRef.current >= COMMIT_AT) {
       modeRef.current = "key"; // let it seat itself; tick commits on arrival
       run();
@@ -317,12 +348,12 @@ export function SlideToLock({
   };
 
   const engaged = phase === "engaged";
-  const locked = phase === "locked";
+  const sealing = phase === "sealing";
 
   return (
     <div
       ref={rootRef}
-      className={cn("lock-control", locked && "is-locked", engaged && "is-engaged", className)}
+      className={cn("lock-control", sealing && "is-sealed", engaged && "is-engaged", className)}
       style={{ "--p": 0, "--x": "0px" } as React.CSSProperties}
       data-disabled={disabled || undefined}
     >
@@ -331,18 +362,22 @@ export function SlideToLock({
         className="lock-track"
         style={{ height: TRACK_H, borderRadius: TRACK_H / 2 }}
       >
-        <div className="lock-track-fill" aria-hidden="true" />
-        <div className="lock-track-zone" aria-hidden="true" />
+        <div className="lock-track-travelled" aria-hidden="true" />
+        {/* The lit edge of the material brightens wherever the knob is. */}
+        <div className="lock-track-edge" aria-hidden="true" />
+        <div className="lock-track-terminus" aria-hidden="true" />
+        {/* One clipped band of light: idle drift, and a single pass on sealing. */}
+        <div className="lock-track-sheen" aria-hidden="true" />
 
         <div className="lock-track-label" aria-hidden="true">
-          <span className={cn("lock-label-hint", locked && "is-out")}>
-            <span className={engaged ? undefined : "hint-sheen"}>{label}</span>
+          <span className={cn("lock-label", "lock-label-open", sealing && "is-out")}>{label}</span>
+          <span className={cn("lock-label", "lock-label-shut", sealing && "is-in")}>
+            {confirmedLabel}
           </span>
-          <span className={cn("lock-label-done", locked && "is-in")}>{confirmedLabel}</span>
         </div>
 
         <div
-          ref={thumbRef}
+          ref={knobRef}
           role="slider"
           tabIndex={disabled ? -1 : 0}
           aria-label={label}
@@ -350,7 +385,7 @@ export function SlideToLock({
           aria-valuemax={100}
           aria-valuenow={Math.round(travel * 100)}
           aria-valuetext={
-            locked
+            sealing
               ? "Locked"
               : `${Math.round(travel * 100)} percent. Hold and drag to the end, or use the arrow keys.`
           }
@@ -362,47 +397,17 @@ export function SlideToLock({
           onLostPointerCapture={releaseGesture}
           onKeyDown={onKeyDown}
           onBlur={onBlur}
-          className="lock-thumb"
-          style={{ width: THUMB, height: THUMB, left: INSET }}
+          className="lock-knob"
+          style={{ width: KNOB, height: KNOB, left: INSET }}
         >
-          <span className="lock-thumb-spec" aria-hidden="true" />
-          <span className="lock-thumb-glyph" aria-hidden="true">
-            <ShackleGlyph locked={locked} />
-          </span>
+          <span className="lock-knob-spec" aria-hidden="true" />
+          <LockGlyph ref={glyphRef} size={20} className="lock-knob-glyph" />
         </div>
       </div>
 
       <p className="lock-control-caption" aria-live="polite">
-        {locked ? "Committed" : "Hold and drag to the end"}
+        {sealing ? "Sealed" : "Hold and drag"}
       </p>
     </div>
-  );
-}
-
-/**
- * The Lock mark. The shackle sits open while the gesture is unresolved and
- * seats itself at commitment — the state change is in the geometry, not a
- * color swap.
- */
-function ShackleGlyph({ locked }: { locked: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-      <path
-        className="lock-shackle"
-        d={locked ? "M8 10V7.5a4 4 0 0 1 8 0V10" : "M8 10V7a4 4 0 0 1 8 0v1.4"}
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-      />
-      <rect
-        x="4.75"
-        y="10"
-        width="14.5"
-        height="9.5"
-        rx="3.1"
-        stroke="currentColor"
-        strokeWidth="1.9"
-      />
-    </svg>
   );
 }

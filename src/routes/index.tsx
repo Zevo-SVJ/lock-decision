@@ -1,29 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { Composer } from "@/components/lock/Composer";
+import { AnswerField } from "@/components/lock/AnswerField";
+import { ChoiceList } from "@/components/lock/ChoiceList";
 import { LockMark } from "@/components/lock/LockMark";
-import { OptionList } from "@/components/lock/OptionList";
-import { ProgressArc } from "@/components/lock/ProgressArc";
+import { ScaleControl } from "@/components/lock/ScaleControl";
 import { SealCard } from "@/components/lock/SealCard";
+import { ShareAction } from "@/components/lock/ShareAction";
 import { SlideToLock } from "@/components/SlideToLock";
 import { useLockJourney } from "@/hooks/use-lock-journey";
 import { useViewportInset } from "@/hooks/use-viewport-inset";
-import type { JourneyState } from "@/lib/lock-types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Lock" },
-      {
-        name: "description",
-        content: "Lock is a decision instrument. Name it, hold it, commit.",
-      },
+      { name: "description", content: "A decision instrument." },
       { property: "og:title", content: "Lock" },
-      { property: "og:description", content: "Name it. Hold it. Commit." },
+      { property: "og:description", content: "A decision instrument." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#111113" },
+      { name: "theme-color", content: "#0e0e10" },
     ],
   }),
   component: LockApp,
@@ -31,148 +28,167 @@ export const Route = createFileRoute("/")({
 
 function LockApp() {
   const journey = useLockJourney();
-  const { phase, question, options, pending, error, verdict, seal, decision } = journey;
+  const { phase, prompt, pending, error, verdict, seal, decision } = journey;
 
-  const [answer, setAnswer] = useState("");
+  const [text, setText] = useState("");
+  const [level, setLevel] = useState<number | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
 
   useViewportInset();
 
-  // Each new question arrives clean — nothing carries over from the last one.
+  // Every question arrives clean; nothing carries over from the last one.
   useEffect(() => {
-    setAnswer("");
+    setText("");
+    setLevel(null);
     setChosen(null);
-  }, [question]);
+  }, [prompt.text]);
 
-  async function send(raw: string) {
-    if (phase === "decision") {
-      if (journey.captureDecision(raw)) setAnswer("");
+  async function send(answer: string) {
+    if (phase === "understanding") {
+      if (journey.captureDecision(answer)) setText("");
       return;
     }
-    const ok = await journey.submitAnswer(raw);
-    if (ok) setAnswer("");
+    const ok = await journey.submitAnswer(answer);
+    if (ok) setText("");
   }
 
-  function choose(option: string) {
+  function choose(choice: string) {
     if (pending) return;
-    setChosen(option);
-    void send(option);
+    setChosen(choice);
+    void send(choice);
   }
 
-  const asking = phase === "decision" || phase === "journey";
+  const asking = phase === "understanding" || phase === "focus";
+  const kind = phase === "understanding" ? "text" : prompt.kind;
+  const canContinue = kind === "scale" ? level !== null : text.trim().length > 0;
+
+  function submitCurrent() {
+    if (pending) return;
+    if (kind === "scale" && level !== null) void send(`${level} out of 10`);
+    else if (text.trim()) void send(text);
+  }
 
   return (
     <>
       <div className="lock-ground" aria-hidden="true" />
       <main className="lock-viewport">
         <div className="lock-column">
-          <header className="flex h-14 shrink-0 items-center justify-between text-fg-2">
-            <LockMark />
-            {phase !== "intro" && (
-              <span className="text-fg-2">
-                <ProgressArc value={journey.progress} />
-              </span>
-            )}
+          <header className="lock-chrome">
+            <LockMark progress={journey.certainty} pulsing={pending} />
           </header>
 
-          <section className="lock-stage">
-            {phase === "intro" && (
-              <div className="stage-bias">
-                <p className="type-meta anim-enter">Standby</p>
-                <h1 className="type-question anim-enter anim-enter-1 mt-7 text-balance">
+          <section className="lock-stage" data-phase={phase} data-pending={pending || undefined}>
+            {phase === "idle" && (
+              <div className="state-enter">
+                <h1 className="type-display">
                   One decision at a time.
-                  <br />
-                  Then it closes.
+                  <span className="type-display-dim"> Then it closes.</span>
                 </h1>
-                <p className="type-body anim-enter anim-enter-2 mt-6 max-w-[30ch]">
-                  Lock asks what it needs to, then hands you the control.
-                </p>
               </div>
             )}
 
             {asking && (
-              <div key={question} className="anim-settle stage-bias">
-                <p className="type-meta">{stateLabel(journey.state)}</p>
-                <h2 className="type-question mt-7 text-balance">{question}</h2>
-                {phase === "journey" && verdict?.reason && (
-                  <p className="type-body mt-7 border-l border-white/10 pl-4 text-fg-3">
-                    {verdict.reason}
-                  </p>
+              <div
+                key={prompt.text}
+                className="state-enter"
+                data-answering={text.trim().length > 0 || level !== null || undefined}
+              >
+                {phase === "focus" && verdict?.reason && (
+                  <p className="read-line">{verdict.reason}</p>
                 )}
+                <h2 className="type-question">{prompt.text}</h2>
+
+                <div className="answer-zone">
+                  {kind === "text" && (
+                    <AnswerField
+                      value={text}
+                      onChange={setText}
+                      onSubmit={submitCurrent}
+                      disabled={pending}
+                      autoFocus
+                      placeholder={
+                        phase === "understanding" ? "Name it plainly" : "In your own words"
+                      }
+                    />
+                  )}
+                  {kind === "choice" && prompt.choices && (
+                    <ChoiceList
+                      choices={prompt.choices}
+                      selected={chosen}
+                      onSelect={choose}
+                      disabled={pending}
+                    />
+                  )}
+                  {kind === "scale" && (
+                    <ScaleControl
+                      value={level}
+                      onChange={setLevel}
+                      disabled={pending}
+                      ends={["not at all", "completely"]}
+                    />
+                  )}
+                </div>
               </div>
             )}
 
-            {phase === "commit" && (
-              <div className="anim-settle stage-bias">
-                <p className="type-meta">Commitment</p>
-                <h2 className="type-statement mt-7 text-balance">{decision}</h2>
-                {verdict?.reason && <p className="type-body mt-6 text-fg-2">{verdict.reason}</p>}
+            {phase === "ready" && (
+              <div className="state-enter">
+                <p className="read-line">{verdict?.reason ?? "This is ready."}</p>
+                <h2 className="type-statement">{decision}</h2>
               </div>
             )}
 
-            {phase === "complete" && seal && (
+            {phase === "locked" && seal && (
               <SealCard seal={seal} decision={decision} statement={verdict?.reason ?? ""} />
             )}
 
-            {phase === "aborted" && (
-              <div className="anim-enter stage-bias">
-                <p className="type-meta">Refused</p>
-                <h2 className="type-statement mt-7 text-balance">Lock won't hold this one.</h2>
-                {verdict?.reason && <p className="type-body mt-6">{verdict.reason}</p>}
+            {phase === "refused" && (
+              <div className="state-enter">
+                <h2 className="type-statement">Lock won&rsquo;t hold this one.</h2>
+                {verdict?.reason && <p className="read-line read-line--after">{verdict.reason}</p>}
               </div>
             )}
           </section>
 
           <div className="lock-dock">
-            {phase === "intro" && (
-              <button
-                type="button"
-                onClick={journey.begin}
-                className="lock-action anim-enter anim-enter-3"
-              >
+            {error && (
+              <button type="button" onClick={journey.dismissError} className="lock-notice">
+                {error}
+              </button>
+            )}
+
+            {phase === "idle" && (
+              <button type="button" onClick={journey.begin} className="action action--primary">
                 Begin
               </button>
             )}
 
-            {asking && (
-              <div className="flex flex-col gap-3">
-                {error && (
-                  <button
-                    type="button"
-                    onClick={journey.dismissError}
-                    className="lock-notice"
-                    aria-live="polite"
-                  >
-                    {error}
-                  </button>
-                )}
-                {options && (
-                  <OptionList
-                    options={options}
-                    selected={chosen}
-                    onSelect={choose}
-                    disabled={pending}
-                  />
-                )}
-                <Composer
-                  value={answer}
-                  onChange={setAnswer}
-                  onSubmit={() => void send(answer)}
-                  pending={pending}
-                  placeholder={phase === "decision" ? "Name the decision" : "In your own words"}
-                />
-              </div>
-            )}
-
-            {phase === "commit" && <SlideToLock onConfirm={journey.confirmLock} />}
-
-            {(phase === "complete" || phase === "aborted") && (
+            {asking && kind !== "choice" && (
               <button
                 type="button"
-                onClick={journey.reset}
-                className="lock-action lock-action--quiet"
+                onClick={submitCurrent}
+                disabled={!canContinue || pending}
+                className="action action--quiet action--conditional"
+                data-shown={canContinue || undefined}
               >
-                {phase === "complete" ? "Lock another decision" : "Start over"}
+                Continue
+              </button>
+            )}
+
+            {phase === "ready" && <SlideToLock onConfirm={journey.confirmLock} />}
+
+            {phase === "locked" && seal && (
+              <>
+                <ShareAction seal={seal} decision={decision} statement={verdict?.reason ?? ""} />
+                <button type="button" onClick={journey.reset} className="action-plain">
+                  Lock another
+                </button>
+              </>
+            )}
+
+            {phase === "refused" && (
+              <button type="button" onClick={journey.reset} className="action action--quiet">
+                Start over
               </button>
             )}
           </div>
@@ -180,20 +196,4 @@ function LockApp() {
       </main>
     </>
   );
-}
-
-/** Cold, structural labels. They name the stage, they don't narrate it. */
-function stateLabel(state: JourneyState): string {
-  switch (state) {
-    case "explore":
-      return "Subject";
-    case "assess_commitment":
-      return "Assessment";
-    case "decision":
-      return "Commitment";
-    case "complete":
-      return "Sealed";
-    default:
-      return "Standby";
-  }
 }
