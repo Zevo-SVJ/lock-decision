@@ -77,13 +77,13 @@ export function ShareActions({ seal, decision, synthesis, format }: Props) {
   if (inviting) {
     return (
       <div className="invite">
-        <p className="invite-lead">Give them a decision to lock.</p>
+        <p className="invite-lead">Hand them something to decide.</p>
         <div className="answer-field" data-filled={prompt.trim().length > 0 || undefined}>
           <textarea
             rows={2}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ask them to decide…"
+            placeholder="The decision, in one line"
             maxLength={160}
             enterKeyHint="send"
             aria-label="The decision you are sending"
@@ -117,7 +117,7 @@ export function ShareActions({ seal, decision, synthesis, format }: Props) {
   return (
     <div className="share-actions">
       <button type="button" className="action action--quiet" onClick={() => void shareCard()}>
-        {status === "saved" ? "Saved" : status === "failed" ? "Try again" : "Share"}
+        {status === "saved" ? "Saved" : status === "failed" ? "Again" : "Take the card"}
       </button>
       <button type="button" className="action action--primary" onClick={() => setInviting(true)}>
         Lock someone else

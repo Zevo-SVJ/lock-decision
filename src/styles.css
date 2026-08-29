@@ -259,7 +259,8 @@
   padding-block: 1.25rem;
   transition:
     opacity var(--t-state) var(--ease-system),
-    filter var(--t-state) var(--ease-system);
+    filter var(--t-state) var(--ease-system),
+    transform 620ms var(--ease-system);
 }
 
 .lock-stage::-webkit-scrollbar {
@@ -464,7 +465,7 @@
 .lock-track-travelled {
   position: absolute;
   inset: 3px auto 3px 3px;
-  width: calc(var(--x) + 50px);
+  width: calc(var(--x) + 68px);
   border-radius: 999px;
   background: linear-gradient(
     90deg,
@@ -479,7 +480,7 @@
   top: 5px;
   bottom: 5px;
   right: 5px;
-  width: 52px;
+  width: 72px;
   border-radius: 999px;
   opacity: var(--near);
   background: radial-gradient(
@@ -553,7 +554,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding-left: 40px;
+  padding-left: 56px;
   pointer-events: none;
 }
 
@@ -599,7 +600,7 @@
 .lock-knob {
   position: absolute;
   top: 50%;
-  margin-top: -23px;
+  margin-top: -31px;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -659,8 +660,8 @@
     0 1px 1px oklch(0 0 0 / 38%),
     0 10px 22px -10px oklch(0 0 0 / 85%),
     inset 0 1px 0 oklch(1 0 0 / 60%),
-    0 0 0 8px oklch(1 0 0 / 4%),
-    0 0 26px -6px oklch(1 0 0 / calc(8% + var(--near) * 24%));
+    0 0 0 5px oklch(1 0 0 / 3.5%),
+    0 0 20px -8px oklch(1 0 0 / calc(10% + var(--near) * 28%));
 }
 
 /* Sealed: shut, stabilised, lit once. */
@@ -696,8 +697,8 @@
     0 1px 1px oklch(0 0 0 / 38%),
     0 8px 18px -9px oklch(0 0 0 / 82%),
     inset 0 1px 0 oklch(1 0 0 / 60%),
-    0 0 0 10px oklch(1 0 0 / 5%),
-    0 0 32px -6px var(--signal);
+    0 0 0 7px oklch(1 0 0 / 5%),
+    0 0 26px -8px var(--signal);
 }
 
 .lock-control.is-sealed .lock-knob-glyph {
@@ -1212,7 +1213,7 @@ html[data-gesture="lock"] .lock-chrome {
   height: 1px;
   pointer-events: none;
   background: radial-gradient(
-    58px 1px at calc(var(--x) + 28px) 0,
+    72px 1px at calc(var(--x) + 36px) 0,
     oklch(1 0 0 / calc(16% + var(--active) * 20%)) 0%,
     transparent 72%
   );
@@ -1226,26 +1227,35 @@ html[data-gesture="lock"] .lock-chrome {
   margin-bottom: clamp(0rem, 4vh, 1.5rem);
 }
 
-/* ================================================================== *
- * The commit dock
- *
- * Apple's guidance is that a control sits on a system material rather than
- * directly on content. The Lock control gets that shelf, and nothing else does.
- * ================================================================== */
-
-.commit-dock {
-  padding: 0.75rem 0.75rem 0.5rem;
-  border-radius: 1.875rem;
-  background-image: linear-gradient(180deg, oklch(1 0 0 / 3.5%), oklch(1 0 0 / 1%));
-  border: 1px solid oklch(1 0 0 / 5%);
-  backdrop-filter: blur(18px) saturate(130%);
-  -webkit-backdrop-filter: blur(18px) saturate(130%);
+/*
+ * The control's footprint is the reference's, held at every width: 68.2% of
+ * the screen, at 798:215. Height and knob are derived from that width so the
+ * proportions never drift on a smaller or larger phone.
+ */
+.lock-control {
+  --track-w: min(68.2vw, 19rem);
+  --track-h: calc(var(--track-w) * 215 / 798);
+  --knob: calc(var(--track-h) - 10px);
+  width: var(--track-w);
+  margin-inline: auto;
 }
 
-/* Compact and centred: the control is dense, not a full-bleed CTA. */
-.lock-control {
-  max-width: 20rem;
-  margin-inline: auto;
+.lock-track {
+  height: var(--track-h);
+  border-radius: calc(var(--track-h) / 2);
+}
+
+.lock-knob {
+  width: var(--knob);
+  height: var(--knob);
+  margin-top: calc(var(--knob) / -2);
+}
+
+/* The glyph scales with the knob rather than sitting at a fixed size. */
+.lock-knob-glyph svg,
+svg.lock-knob-glyph {
+  width: 45%;
+  height: 45%;
 }
 
 /* ================================================================== *
@@ -1569,4 +1579,35 @@ html[data-gesture="lock"] .lock-chrome {
   background: oklch(0 0 0 / 45%);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+/* ================================================================== *
+ * Decision state, felt rather than labelled
+ *
+ * There is no bar and no step count. Resolution is carried by three things
+ * moving together: the mark's shackle closing, the content settling upward as
+ * the decision firms up, and the ground brightening under it. Unresolved
+ * states sit slightly low and slightly dim; a resolved one has risen.
+ * ================================================================== */
+
+.lock-column {
+  --certainty: 0;
+}
+
+/* On the stage itself, not its children — the entrance animation owns their
+   transform, and an animation beats a plain declaration. */
+.lock-stage {
+  transform: translate3d(0, calc((1 - var(--certainty, 0)) * 10px), 0);
+}
+
+.lock-ground {
+  /* The floor gains a little light as the decision resolves. */
+  opacity: calc(0.86 + var(--certainty, 0) * 0.14);
+  transition: opacity 620ms var(--ease-system);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lock-stage {
+    transform: none;
+  }
 }

@@ -19,9 +19,12 @@ type Props = {
   className?: string;
 };
 
-const TRACK_H = 50; // px — compact; the knob still clears the 44px target
-const KNOB = 42; // px
-const INSET = 4; // px — knob inset inside the track
+/*
+ * The control's proportions come from the reference (798 x 215 in a 1170-wide
+ * frame) and are expressed in CSS so they hold at every width. This file only
+ * needs the inset; the knob is measured rather than assumed.
+ */
+const INSET = 5; // px — knob inset inside the track
 
 /** Travel fraction at which the gesture commits. Effectively "the far end". */
 const COMMIT_AT = 0.985;
@@ -94,9 +97,10 @@ export function SlideToLock({
   onConfirmRef.current = onConfirm;
 
   const measure = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    maxRef.current = Math.max(1, el.clientWidth - KNOB - INSET * 2);
+    const track = trackRef.current;
+    const knob = knobRef.current;
+    if (!track || !knob) return;
+    maxRef.current = Math.max(1, track.clientWidth - knob.offsetWidth - INSET * 2);
   }, []);
 
   useEffect(() => {
@@ -269,6 +273,11 @@ export function SlideToLock({
     e.currentTarget.focus({ preventScroll: true });
     pointerStartRef.current = e.clientX;
     grabOffsetRef.current = posRef.current;
+    // Catching the knob mid-return has to freeze it under the finger. Without
+    // this the old target (the resting position) is still in force and the
+    // knob is yanked home the instant it is grabbed.
+    targetRef.current = posRef.current;
+    velRef.current = 0;
     modeRef.current = "drag";
     hapticMarkRef.current = posRef.current / maxRef.current;
     setPhase("engaged");
@@ -359,11 +368,7 @@ export function SlideToLock({
       style={{ "--p": 0, "--x": "0px" } as React.CSSProperties}
       data-disabled={disabled || undefined}
     >
-      <div
-        ref={trackRef}
-        className="lock-track"
-        style={{ height: TRACK_H, borderRadius: TRACK_H / 2 }}
-      >
+      <div ref={trackRef} className="lock-track">
         <div className="lock-track-travelled" aria-hidden="true" />
         {/* The lit edge of the material brightens wherever the knob is. */}
         <div className="lock-track-edge" aria-hidden="true" />
@@ -400,10 +405,10 @@ export function SlideToLock({
           onKeyDown={onKeyDown}
           onBlur={onBlur}
           className="lock-knob"
-          style={{ width: KNOB, height: KNOB, left: INSET }}
+          style={{ left: INSET }}
         >
           <span className="lock-knob-spec" aria-hidden="true" />
-          <LockGlyph ref={glyphRef} size={20} className="lock-knob-glyph" />
+          <LockGlyph ref={glyphRef} className="lock-knob-glyph" />
         </div>
       </div>
 

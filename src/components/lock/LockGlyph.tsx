@@ -10,6 +10,7 @@ export type LockGlyphHandle = {
 type Props = {
   /** Initial / static pose, 0 = open, 1 = shut. */
   progress?: number;
+  /** Intrinsic size. Inside the Lock control CSS scales it with the knob. */
   size?: number;
   className?: string;
 };

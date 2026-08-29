@@ -21,7 +21,7 @@ export function AnswerField({
   value,
   onChange,
   onSubmit,
-  placeholder = "Type your answer",
+  placeholder = "In your own words",
   disabled = false,
   autoFocus = false,
 }: Props) {

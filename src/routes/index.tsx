@@ -99,9 +99,16 @@ function LockApp() {
 
   return (
     <>
-      <div className="lock-ground" aria-hidden="true" />
+      <div
+        className="lock-ground"
+        aria-hidden="true"
+        style={{ "--certainty": journey.certainty } as React.CSSProperties}
+      />
       <main className="lock-viewport">
-        <div className="lock-column">
+        <div
+          className="lock-column"
+          style={{ "--certainty": journey.certainty } as React.CSSProperties}
+        >
           <header className="lock-chrome">
             <LockMark progress={journey.certainty} pulsing={pending} />
             {journey.canGoBack && phase === "working" && !pending && (
@@ -152,7 +159,7 @@ function LockApp() {
                       onSubmit={confirm}
                       disabled={pending}
                       autoFocus
-                      placeholder={invite ? "Your call" : "Name it plainly"}
+                      placeholder={invite ? "Your call" : "Say it in one line"}
                     />
                   )}
 
@@ -211,7 +218,7 @@ function LockApp() {
 
             {phase === "ready" && (
               <div className="state-enter">
-                <p className="read-line">{verdict?.reason ?? "This is yours to make."}</p>
+                <p className="read-line">{verdict?.reason ?? "This one is yours."}</p>
                 <h2 className="type-statement">{decision}</h2>
               </div>
             )}
@@ -239,7 +246,7 @@ function LockApp() {
               <div className="lock-notice">
                 <span>Something interrupted the lock.</span>
                 <button type="button" onClick={() => void journey.retry()} className="notice-retry">
-                  Try again
+                  Again
                 </button>
               </div>
             )}
@@ -258,15 +265,11 @@ function LockApp() {
                 className="action action--quiet action--conditional"
                 data-shown={canConfirm || undefined}
               >
-                Continue
+                Go on
               </button>
             )}
 
-            {phase === "ready" && (
-              <div className="commit-dock">
-                <SlideToLock onConfirm={journey.confirmLock} />
-              </div>
-            )}
+            {phase === "ready" && <SlideToLock onConfirm={journey.confirmLock} />}
 
             {phase === "locked" && seal && (
               <>
@@ -277,14 +280,14 @@ function LockApp() {
                   format={format}
                 />
                 <button type="button" onClick={journey.reset} className="action-plain">
-                  Lock another
+                  Another decision
                 </button>
               </>
             )}
 
             {phase === "refused" && (
               <button type="button" onClick={journey.reset} className="action action--quiet">
-                Start over
+                Something else
               </button>
             )}
           </div>
