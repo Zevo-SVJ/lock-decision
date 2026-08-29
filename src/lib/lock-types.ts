@@ -17,6 +17,12 @@ export const lockVerdictSchema = z.object({
   confidence: z.number().min(0).max(1),
   next_state: z.enum(journeyStates).nullable(),
   followup: z.string().nullable(),
+  /**
+   * Optional short stances the user can pick instead of typing. Nullable and
+   * defaulted so a response without the field stays valid — the gateway may
+   * fall back to the schema that predates it.
+   */
+  options: z.array(z.string().min(1).max(48)).max(4).nullable().default(null),
 });
 
 export type LockVerdict = z.infer<typeof lockVerdictSchema>;

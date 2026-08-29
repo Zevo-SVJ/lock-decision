@@ -5,17 +5,17 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+ * LOCK — design system.
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
+ * Lock is a single-surface instrument, not a website. The palette is
+ * intentionally monochromatic graphite: one near-black ground, a small ladder
+ * of off-white text tones, hairline separators, and a single cold "signal"
+ * tone that is only allowed to appear when the mechanism responds.
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * Materials live in the `--mat-*` tokens. Glass is deliberately scarce: it is
+ * reserved for the interactive layer (the Lock control, the dock, options).
  *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * All colors use oklch.
  */
 
 @theme inline {
@@ -63,95 +63,94 @@
 
 :root {
   --radius: 1.25rem;
-  --background: oklch(0.16 0.006 264);
-  --foreground: oklch(0.97 0.004 264);
-  --card: oklch(0.205 0.007 264);
-  --card-foreground: oklch(0.97 0.004 264);
-  --popover: oklch(0.205 0.007 264);
-  --popover-foreground: oklch(0.97 0.004 264);
-  --primary: oklch(0.88 0.045 92);
-  --primary-foreground: oklch(0.17 0.01 92);
-  --secondary: oklch(0.26 0.007 264);
-  --secondary-foreground: oklch(0.97 0.004 264);
-  --muted: oklch(0.24 0.006 264);
-  --muted-foreground: oklch(0.66 0.008 264);
-  --accent: oklch(0.3 0.008 264);
-  --accent-foreground: oklch(0.97 0.004 264);
-  --destructive: oklch(0.62 0.19 25);
-  --destructive-foreground: oklch(0.98 0.003 264);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.88 0.045 92 / 45%);
+
+  /* ground */
+  --background: oklch(0.135 0.003 264);
+  --background-deep: oklch(0.095 0.003 264);
+  --foreground: oklch(0.975 0.001 264);
+
+  /* text ladder */
+  --fg-1: oklch(0.975 0.001 264); /* primary type */
+  --fg-2: oklch(0.72 0.003 264); /* supporting */
+  --fg-3: oklch(0.52 0.004 264); /* metadata */
+  --fg-4: oklch(0.38 0.004 264); /* structural hints */
+
+  --card: oklch(0.175 0.004 264);
+  --card-foreground: var(--fg-1);
+  --popover: oklch(0.175 0.004 264);
+  --popover-foreground: var(--fg-1);
+  --primary: oklch(0.97 0.002 264);
+  --primary-foreground: oklch(0.14 0.004 264);
+  --secondary: oklch(0.215 0.004 264);
+  --secondary-foreground: var(--fg-1);
+  --muted: oklch(0.2 0.004 264);
+  --muted-foreground: var(--fg-3);
+  --accent: oklch(0.24 0.004 264);
+  --accent-foreground: var(--fg-1);
+  --destructive: oklch(0.6 0.14 25);
+  --destructive-foreground: oklch(0.98 0.002 264);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(1 0 0 / 26%);
+
+  /* the single accent. cold, low chroma, used almost nowhere. */
+  --signal: oklch(0.88 0.035 232);
+  --signal-dim: oklch(0.7 0.03 232);
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.205 0.007 264);
-  --sidebar-foreground: oklch(0.97 0.004 264);
-  --sidebar-primary: oklch(0.88 0.045 92);
-  --sidebar-primary-foreground: oklch(0.17 0.01 92);
-  --sidebar-accent: oklch(0.26 0.007 264);
-  --sidebar-accent-foreground: oklch(0.97 0.004 264);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.88 0.045 92 / 45%);
+  --sidebar: oklch(0.175 0.004 264);
+  --sidebar-foreground: var(--fg-1);
+  --sidebar-primary: oklch(0.97 0.002 264);
+  --sidebar-primary-foreground: oklch(0.14 0.004 264);
+  --sidebar-accent: oklch(0.215 0.004 264);
+  --sidebar-accent-foreground: var(--fg-1);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(1 0 0 / 26%);
 
-  /* Lock slider surface tokens */
-  --track: oklch(0.235 0.006 264);
-  --track-fill: oklch(0.32 0.012 264);
-  --thumb: oklch(0.97 0.004 264);
-  --thumb-foreground: oklch(0.2 0.008 264);
+  /* materials */
+  --mat-glass: linear-gradient(180deg, oklch(1 0 0 / 7.5%) 0%, oklch(1 0 0 / 2.5%) 100%);
+  --mat-glass-edge: oklch(1 0 0 / 9%);
+  --mat-glass-spec: inset 0 1px 0 oklch(1 0 0 / 14%);
+  --mat-sunken: linear-gradient(180deg, oklch(0 0 0 / 34%) 0%, oklch(0 0 0 / 12%) 100%);
+  --mat-hairline: oklch(1 0 0 / 7%);
+
+  /* elevation */
+  --lift-1: 0 1px 0 oklch(1 0 0 / 5%), 0 12px 32px -22px oklch(0 0 0 / 90%);
+  --lift-2: 0 24px 64px -34px oklch(0 0 0 / 95%);
+  --shadow-track:
+    inset 0 1px 2px oklch(0 0 0 / 55%), inset 0 -1px 0 oklch(1 0 0 / 5%),
+    0 1px 0 oklch(1 0 0 / 4%);
   --shadow-thumb:
-    0 1px 2px oklch(0 0 0 / 45%), 0 10px 24px -6px oklch(0 0 0 / 55%),
-    inset 0 1px 0 oklch(1 0 0 / 60%);
-  --shadow-track: inset 0 1px 2px oklch(0 0 0 / 55%), inset 0 -1px 0 oklch(1 0 0 / 6%);
-  --shadow-lift: 0 24px 60px -24px oklch(0 0 0 / 70%);
+    0 1px 1px oklch(0 0 0 / 40%), 0 10px 22px -10px oklch(0 0 0 / 85%),
+    inset 0 1px 0 oklch(1 0 0 / 55%), inset 0 -1px 2px oklch(0 0 0 / 18%);
+
+  /* motion */
+  --ease-system: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 520ms;
 }
 
 @theme inline {
-  --color-track: var(--track);
-  --color-track-fill: var(--track-fill);
-  --color-thumb: var(--thumb);
-  --color-thumb-foreground: var(--thumb-foreground);
+  --color-signal: var(--signal);
+  --color-fg-1: var(--fg-1);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-fg-4: var(--fg-4);
   --font-sans:
-    ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui,
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Inter,
+    system-ui, sans-serif;
 }
 
-
+/* The app is single-theme by design; `.dark` mirrors :root so any shadcn
+   primitive that expects the class keeps working. */
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -159,75 +158,831 @@
     border-color: var(--color-border);
   }
 
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+  html {
+    color-scheme: dark;
+    background-color: var(--background-deep);
   }
-}
 
-@layer base {
   html,
   body {
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
+    height: 100%;
   }
 
   body {
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-synthesis-weight: none;
+  }
+
+  /* Type is set optically, not by browser defaults. */
+  h1,
+  h2,
+  h3,
+  p {
+    text-wrap: pretty;
   }
 }
 
-/* iOS-style shimmering hint text on the slide track */
-@keyframes lock-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+/* ------------------------------------------------------------------ *
+ * Layout: a fixed instrument frame, not a scrolling page.
+ * ------------------------------------------------------------------ */
+
+.lock-viewport {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin-inline: auto;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top);
+  /* --kb is the software-keyboard gap reported by the visual viewport. */
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--kb, 0px));
+  transition: padding-bottom 180ms var(--ease-system);
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
 }
 
-@utility lock-shimmer {
-  background-image: linear-gradient(
-    100deg,
-    var(--muted-foreground) 25%,
-    var(--foreground) 45%,
-    var(--muted-foreground) 65%
+/* Ambient ground. Two extremely soft pools of light so the glass layer has
+   something to refract; nothing here reads as a gradient on its own. */
+.lock-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 70% at 50% 108%,
+      oklch(1 0 0 / calc(3.5% + var(--charge, 0) * 5%)) 0%,
+      transparent 62%
+    ),
+    radial-gradient(100% 60% at 50% -10%, oklch(1 0 0 / 3%) 0%, transparent 60%),
+    var(--background);
+  transition: background 400ms linear;
+}
+
+.lock-column {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 6vw, 1.75rem);
+  min-height: 0;
+}
+
+.lock-stage {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  justify-content: center;
+  /* Long content stays reachable without ever moving the dock. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-block: 1.5rem;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%
   );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: lock-shimmer 3.2s linear infinite;
 }
 
-@keyframes lock-pulse {
-  0% {
-    opacity: 0.55;
-    transform: scale(0.96);
+.lock-stage::-webkit-scrollbar {
+  display: none;
+}
+
+/* Lifts a centred block off the vertical middle so the dock has room to
+   breathe underneath it — the composition, not the content, does the work. */
+.stage-bias {
+  margin-bottom: clamp(1rem, 16vh, 7rem);
+}
+
+@media (max-height: 700px) {
+  .stage-bias {
+    margin-bottom: 0;
   }
-  100% {
-    opacity: 0;
-    transform: scale(1.5);
+}
+
+/* Landscape and short viewports: tighten the frame rather than clip it. */
+@media (max-height: 620px) {
+  .lock-stage {
+    justify-content: flex-start;
+    padding-block: 0.75rem;
+  }
+
+  .type-question {
+    font-size: 1.35rem;
   }
 }
 
-@utility lock-pulse {
-  animation: lock-pulse 0.6s ease-out forwards;
+/* Bottom dock — always inside comfortable thumb reach. */
+.lock-dock {
+  flex: 0 0 auto;
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  padding-top: 1rem;
 }
 
-@keyframes lock-rise {
+/* Landscape on a phone: the frame turns rather than compressing. The control
+   moves beside the content so it stays within reach of the right thumb. */
+@media (orientation: landscape) and (max-height: 560px) and (min-width: 640px) {
+  .lock-column {
+    display: grid;
+    max-width: 52rem;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: clamp(1.5rem, 5vw, 3rem);
+    align-items: center;
+  }
+
+  .lock-column > header {
+    grid-column: 1 / -1;
+  }
+
+  .lock-stage {
+    grid-column: 1;
+    padding-block: 0.5rem;
+  }
+
+  .lock-dock {
+    grid-column: 2;
+    align-self: center;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-top: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Materials
+ * ------------------------------------------------------------------ */
+
+.mat-glass {
+  background-image: var(--mat-glass);
+  background-color: oklch(0.22 0.004 264 / 42%);
+  border: 1px solid var(--mat-glass-edge);
+  box-shadow: var(--mat-glass-spec), var(--lift-1);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+
+.mat-sunken {
+  background-image: var(--mat-sunken);
+  background-color: oklch(0.165 0.004 264 / 70%);
+  border: 1px solid var(--mat-hairline);
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+}
+
+.hairline {
+  border-color: var(--mat-hairline);
+}
+
+/* ------------------------------------------------------------------ *
+ * Typography primitives
+ * ------------------------------------------------------------------ */
+
+.type-question {
+  font-size: clamp(1.6rem, 6.6vw, 2.05rem);
+  line-height: 1.22;
+  letter-spacing: -0.022em;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+.type-statement {
+  font-size: clamp(1.45rem, 5.8vw, 1.8rem);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+.type-body {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  letter-spacing: -0.008em;
+  color: var(--fg-2);
+}
+
+.type-meta {
+  font-size: 0.625rem;
+  line-height: 1;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-mono {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+/* ------------------------------------------------------------------ *
+ * Motion
+ * ------------------------------------------------------------------ */
+
+@keyframes lock-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translate3d(0, 8px, 0);
+    filter: blur(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+    filter: blur(0);
   }
 }
 
-@utility lock-rise {
-  animation: lock-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+.anim-enter {
+  animation: lock-enter var(--dur-slow) var(--ease-system) both;
+}
+
+.anim-enter-1 {
+  animation-delay: 60ms;
+}
+.anim-enter-2 {
+  animation-delay: 120ms;
+}
+.anim-enter-3 {
+  animation-delay: 190ms;
+}
+
+/* The question "settling" as the interface reorganises toward commitment. */
+@keyframes lock-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-settle {
+  animation: lock-settle 420ms var(--ease-system) both;
+}
+
+/* Confirmation: the whole frame compresses once, briefly. */
+@keyframes lock-compress {
+  0% {
+    transform: scale(1);
+  }
+  38% {
+    transform: scale(0.976);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.anim-compress {
+  animation: lock-compress 520ms var(--ease-system) both;
+}
+
+@keyframes lock-sweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(-40%, 0, 0);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(140%, 0, 0);
+  }
+}
+
+/* Slow drift of light across the idle track — the mechanism breathing. */
+@keyframes lock-hint {
+  0%,
+  62% {
+    background-position: 220% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
+}
+
+.hint-sheen {
+  background-image: linear-gradient(
+    100deg,
+    var(--fg-4) 0%,
+    var(--fg-4) 38%,
+    var(--fg-1) 50%,
+    var(--fg-4) 62%,
+    var(--fg-4) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lock-hint 4.6s var(--ease-system) infinite;
+}
+
+@keyframes lock-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+.anim-breathe {
+  animation: lock-breathe 3.4s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reduced motion — the interface stops moving on its own, but every
+ * direct-manipulation response is preserved.
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-enter,
+  .anim-settle,
+  .anim-compress {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+
+  .hint-sheen {
+    animation: none;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--fg-2);
+  }
+
+  .anim-breathe {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * The Lock control.
+ *
+ * Every continuous visual response reads from `--p` (0..1 travel) which the
+ * component writes each frame. The control moves through four legible bands
+ * without ever labelling them: calm, waking, active, and the final zone.
+ * ------------------------------------------------------------------ */
+
+.lock-control {
+  --p: 0;
+  --x: 0px;
+  /* eased bands derived from travel */
+  --active: clamp(0, calc((var(--p) - 0.3) / 0.4), 1);
+  /* the hint clears out early, long before the thumb reaches it */
+  --fade: clamp(0, calc((var(--p) - 0.04) / 0.3), 1);
+  --near: clamp(0, calc((var(--p) - 0.7) / 0.2), 1);
+  --final: clamp(0, calc((var(--p) - 0.9) / 0.1), 1);
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lock-track {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+  background-image: var(--mat-sunken);
+  background-color: oklch(0.185 0.004 264 / 82%);
+  border: 1px solid oklch(1 0 0 / calc(9% + var(--active) * 6% + var(--final) * 12%));
+  box-shadow: var(--shadow-track);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  transition: border-color 220ms linear;
+}
+
+/* Travelled portion. Kept dim: it reports position, it doesn't celebrate. */
+.lock-track-fill {
+  position: absolute;
+  inset: 3px auto 3px 3px;
+  width: calc(var(--x) + 70px);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    oklch(1 0 0 / calc(2% + var(--active) * 4%)) 0%,
+    oklch(1 0 0 / calc(4% + var(--active) * 7%)) 100%
+  );
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / calc(2% + var(--near) * 5%));
+}
+
+/* The final zone. Invisible until the gesture is genuinely committed-looking. */
+.lock-track-zone {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  right: 6px;
+  width: 64px;
+  border-radius: 999px;
+  opacity: var(--near);
+  background: radial-gradient(
+    75% 120% at 70% 50%,
+    oklch(1 0 0 / calc(6% + var(--final) * 22%)) 0%,
+    transparent 72%
+  );
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / calc(4% + var(--final) * 20%));
+  transition: opacity 160ms linear;
+}
+
+.lock-track-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  padding-left: 56px;
+}
+
+.lock-label-hint,
+.lock-label-done {
+  grid-area: 1 / 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: lowercase;
+  transition:
+    opacity 200ms linear,
+    transform 320ms var(--ease-system),
+    filter 200ms linear;
+}
+
+.lock-label-hint {
+  /* Clears out as the gesture starts, so nothing competes with the thumb. */
+  opacity: calc(1 - var(--fade));
+  color: var(--fg-2);
+}
+
+.lock-label-hint.is-out {
+  opacity: 0;
+  transform: translate3d(0, -6px, 0);
+  filter: blur(3px);
+}
+
+.lock-label-done {
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  filter: blur(4px);
+  color: var(--fg-1);
+  letter-spacing: 0.34em;
+}
+
+.lock-label-done.is-in {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  transition-delay: 90ms;
+}
+
+/* The thumb: a solid, slightly separated object sitting above the track. */
+.lock-thumb {
+  position: absolute;
+  top: 50%;
+  margin-top: -32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: oklch(0.16 0.004 264);
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+  will-change: transform;
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 96%) 0%, oklch(0.9 0.002 264 / 92%) 55%, oklch(0.83 0.003 264 / 90%) 100%);
+  box-shadow: var(--shadow-thumb);
+}
+
+.lock-thumb:active {
+  cursor: grabbing;
+}
+
+.lock-thumb:focus-visible {
+  box-shadow:
+    var(--shadow-thumb),
+    0 0 0 3px oklch(0.14 0.004 264),
+    0 0 0 5px oklch(1 0 0 / 55%);
+}
+
+/* Specular highlight — one soft sweep, not a gradient stack. */
+.lock-thumb-spec {
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(
+      60% 45% at 34% 22%,
+      oklch(1 0 0 / 85%) 0%,
+      oklch(1 0 0 / 0%) 70%
+    ),
+    linear-gradient(180deg, oklch(1 0 0 / 30%) 0%, oklch(1 0 0 / 0%) 42%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+.lock-thumb-glyph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  opacity: 0.88;
+}
+
+.lock-shackle {
+  transition: d 260ms var(--ease-system);
+}
+
+/* Waking: the control gains presence the moment it is grabbed. */
+.lock-control.is-engaged .lock-track {
+  border-color: oklch(1 0 0 / 13%);
+}
+
+.lock-control.is-engaged .lock-thumb {
+  box-shadow:
+    var(--shadow-thumb),
+    0 0 0 10px oklch(1 0 0 / 4%),
+    0 0 30px -6px oklch(1 0 0 / calc(10% + var(--near) * 26%));
+}
+
+/* Committed. */
+.lock-control.is-locked .lock-track {
+  border-color: oklch(1 0 0 / 20%);
+  animation: lock-compress 520ms var(--ease-system) both;
+}
+
+.lock-control.is-locked .lock-track-fill {
+  background: linear-gradient(90deg, oklch(1 0 0 / 8%) 0%, oklch(1 0 0 / 14%) 100%);
+}
+
+.lock-control.is-locked .lock-thumb {
+  color: oklch(0.13 0.004 264);
+  box-shadow:
+    var(--shadow-thumb),
+    0 0 0 12px oklch(1 0 0 / 5%),
+    0 0 44px -4px var(--signal);
+}
+
+.lock-control.is-locked .lock-thumb-glyph {
+  opacity: 1;
+}
+
+.lock-control[data-disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.lock-control-caption {
+  margin-top: 0.875rem;
+  text-align: center;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: oklch(0.52 0.004 264 / calc(100% - var(--active) * 45%));
+  transition: color 200ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lock-control.is-locked .lock-track {
+    animation: none;
+  }
+  .lock-shackle {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Options — system choices, not chat replies.
+ * ------------------------------------------------------------------ */
+
+.lock-option {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 52px;
+  padding: 0.875rem 1.125rem;
+  border-radius: 1rem;
+  text-align: left;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  letter-spacing: -0.008em;
+  color: var(--fg-1);
+  background-image: var(--mat-glass);
+  background-color: oklch(0.21 0.004 264 / 34%);
+  border: 1px solid var(--mat-hairline);
+  box-shadow: var(--mat-glass-spec);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  transition:
+    transform 220ms var(--ease-system),
+    background-color 180ms linear,
+    border-color 180ms linear,
+    box-shadow 180ms linear;
+}
+
+.lock-option:active {
+  transform: scale(0.982);
+}
+
+.lock-option[data-selected="true"] {
+  background-color: oklch(0.3 0.004 264 / 55%);
+  border-color: oklch(1 0 0 / 20%);
+  box-shadow: var(--mat-glass-spec), 0 0 0 1px oklch(1 0 0 / 6%);
+}
+
+.lock-option[data-selected="true"] .lock-option-dot {
+  background: var(--fg-1);
+  box-shadow: 0 0 12px oklch(1 0 0 / 45%);
+}
+
+.lock-option-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: oklch(1 0 0 / 22%);
+  transition:
+    background 180ms linear,
+    box-shadow 180ms linear;
+}
+
+.lock-option:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Composer — one field, no chat furniture.
+ * ------------------------------------------------------------------ */
+
+/* System notices: stated once, dismissible, never styled as an alert. */
+.lock-notice {
+  display: block;
+  width: 100%;
+  padding-left: 0.875rem;
+  border-left: 1px solid oklch(1 0 0 / 14%);
+  text-align: left;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--fg-2);
+}
+
+.lock-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.625rem;
+  padding: 0.5rem 0.5rem 0.5rem 1.125rem;
+  border-radius: 1.5rem;
+  background-image: var(--mat-glass);
+  background-color: oklch(0.2 0.004 264 / 40%);
+  border: 1px solid var(--mat-hairline);
+  box-shadow: var(--mat-glass-spec), var(--lift-1);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  transition: border-color 200ms linear;
+}
+
+.lock-composer:focus-within {
+  border-color: oklch(1 0 0 / 18%);
+}
+
+.lock-input {
+  flex: 1 1 auto;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg-1);
+  font-size: 1rem; /* never below 16px — iOS zooms otherwise */
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  padding: 0.625rem 0;
+  max-height: 8.5rem;
+}
+
+.lock-input::placeholder {
+  color: var(--fg-4);
+}
+
+.lock-send {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--fg-1);
+  color: oklch(0.14 0.004 264);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 6px 16px -8px oklch(0 0 0 / 80%);
+  transition:
+    transform 200ms var(--ease-system),
+    opacity 200ms linear;
+}
+
+.lock-send:disabled {
+  opacity: 0.26;
+}
+
+.lock-send:not(:disabled):active {
+  transform: scale(0.93);
+}
+
+/* ------------------------------------------------------------------ *
+ * Primary action — glass, with weight.
+ * ------------------------------------------------------------------ */
+
+.lock-action {
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: oklch(0.14 0.004 264);
+  background: linear-gradient(180deg, oklch(1 0 0 / 97%), oklch(0.9 0.002 264 / 94%));
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 60%), var(--lift-1);
+  transition: transform 200ms var(--ease-system);
+}
+
+.lock-action:active {
+  transform: scale(0.985);
+}
+
+.lock-action--quiet {
+  color: var(--fg-2);
+  background: oklch(0.22 0.004 264 / 42%);
+  border: 1px solid var(--mat-hairline);
+  box-shadow: var(--mat-glass-spec);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* ------------------------------------------------------------------ *
+ * The seal — the shareable artefact of a locked decision.
+ * ------------------------------------------------------------------ */
+
+.lock-seal {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  padding: 1.5rem 1.375rem 1.25rem;
+  background-image: linear-gradient(
+    165deg,
+    oklch(0.235 0.004 264 / 72%) 0%,
+    oklch(0.16 0.004 264 / 78%) 58%,
+    oklch(0.19 0.004 264 / 74%) 100%
+  );
+  border: 1px solid oklch(1 0 0 / 10%);
+  box-shadow: var(--mat-glass-spec), var(--lift-2);
+  backdrop-filter: blur(30px) saturate(150%);
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+}
+
+.lock-seal::after {
+  /* single cold rim of light along the top edge */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(120% 60% at 50% -20%, oklch(0.9 0.03 232 / 12%), transparent 60%);
+}
+
+.lock-seal-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(1 0 0 / 12%) 18%,
+    oklch(1 0 0 / 12%) 82%,
+    transparent
+  );
 }
