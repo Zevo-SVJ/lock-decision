@@ -10,6 +10,18 @@ export const journeyStates = [
 
 export type JourneyState = (typeof journeyStates)[number];
 
+/**
+ * What the system does next. Not every turn is a question: Lock can reflect
+ * something back, surface the tension underneath a decision, or simply decide
+ * it has heard enough.
+ */
+export const moves = ["clarify", "reflect", "tradeoff", "choose", "commit"] as const;
+export type Move = (typeof moves)[number];
+
+/** How a `clarify` move should be answered. */
+export const inputKinds = ["text", "choice", "scale"] as const;
+export type InputKind = (typeof inputKinds)[number];
+
 export const lockVerdictSchema = z.object({
   verdict: z.enum(["lock", "unlock", "hold", "reject"]),
   reason: z.string().min(1),
@@ -18,17 +30,26 @@ export const lockVerdictSchema = z.object({
   next_state: z.enum(journeyStates).nullable(),
   followup: z.string().nullable(),
   /**
-   * Optional short stances the user can pick instead of typing. Nullable and
-   * defaulted so a response without the field stays valid — the gateway may
-   * fall back to the schema that predates it.
+   * Short stances the user can pick instead of typing. Every field below is
+   * nullable with a default so a response from the pre-existing schema still
+   * parses — the gateway falls back to it if it rejects the extended shape.
    */
-  options: z.array(z.string().min(1).max(48)).max(4).nullable().default(null),
   /**
-   * Which interaction the next question deserves: free text, a set of stances,
-   * or a degree. Nullable for the same reason as `options`; the interface
-   * falls back to text.
+   * The response schema asks for at most four; the parser tolerates more so an
+   * over-eager model costs a trim rather than the whole verdict. The interface
+   * takes the first four.
    */
-  input_kind: z.enum(["text", "choice", "scale"]).nullable().default(null),
+  options: z.array(z.string().min(1).max(60)).max(8).nullable().default(null),
+  input_kind: z.enum(inputKinds).nullable().default(null),
+  /** The interaction to present next. */
+  move: z.enum(moves).nullable().default(null),
+  /** For `tradeoff`: the two things actually in tension. */
+  tradeoff_a: z.string().max(28).nullable().default(null),
+  tradeoff_b: z.string().max(28).nullable().default(null),
+  /** 0 = entirely toward A, 1 = entirely toward B. */
+  tradeoff_lean: z.number().min(0).max(1).nullable().default(null),
+  /** Two or three lines shown with the locked decision. Not a report. */
+  synthesis: z.string().max(400).nullable().default(null),
 });
 
 export type LockVerdict = z.infer<typeof lockVerdictSchema>;

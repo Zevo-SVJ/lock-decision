@@ -1,15 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AnswerField } from "@/components/lock/AnswerField";
 import { ChoiceList } from "@/components/lock/ChoiceList";
 import { LockMark } from "@/components/lock/LockMark";
+import { LockResult } from "@/components/lock/LockResult";
+import { Reflection } from "@/components/lock/Reflection";
 import { ScaleControl } from "@/components/lock/ScaleControl";
-import { SealCard } from "@/components/lock/SealCard";
-import { ShareAction } from "@/components/lock/ShareAction";
+import { ShareActions } from "@/components/lock/ShareActions";
+import { Tradeoff } from "@/components/lock/Tradeoff";
 import { SlideToLock } from "@/components/SlideToLock";
-import { useLockJourney } from "@/hooks/use-lock-journey";
+import { useLockJourney, OPENING } from "@/hooks/use-lock-journey";
 import { useViewportInset } from "@/hooks/use-viewport-inset";
+import { clearInviteFromUrl, readInvite, type Invite } from "@/lib/lock-invite";
+import type { ShareFormat } from "@/lib/share-card";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,10 +21,10 @@ export const Route = createFileRoute("/")({
       { title: "Lock" },
       { name: "description", content: "A decision instrument." },
       { property: "og:title", content: "Lock" },
-      { property: "og:description", content: "A decision instrument." },
+      { property: "og:description", content: "Decide. Then lock it." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#0e0e10" },
+      { name: "theme-color", content: "#0b0b0d" },
     ],
   }),
   component: LockApp,
@@ -28,45 +32,70 @@ export const Route = createFileRoute("/")({
 
 function LockApp() {
   const journey = useLockJourney();
-  const { phase, prompt, pending, error, verdict, seal, decision } = journey;
+  const { phase, step, pending, failed, verdict, seal, decision } = journey;
 
   const [text, setText] = useState("");
   const [level, setLevel] = useState<number | null>(null);
-  const [chosen, setChosen] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [invite, setInvite] = useState<Invite | null>(null);
+  const [format, setFormat] = useState<ShareFormat>("story");
 
   useViewportInset();
 
-  // Every question arrives clean; nothing carries over from the last one.
+  // An invitation, if this Lock was handed over by someone else.
+  useEffect(() => {
+    setInvite(readInvite());
+  }, []);
+
+  // Every move arrives clean; nothing carries over from the last one.
+  const stepKey = step?.text ?? phase;
   useEffect(() => {
     setText("");
     setLevel(null);
-    setChosen(null);
-  }, [prompt.text]);
+    setPicked(null);
+  }, [stepKey]);
 
   async function send(answer: string) {
-    if (phase === "understanding") {
-      if (journey.captureDecision(answer)) setText("");
+    if (phase === "naming") {
+      await journey.name(answer);
       return;
     }
-    const ok = await journey.submitAnswer(answer);
-    if (ok) setText("");
+    await journey.respond(answer);
   }
 
-  function choose(choice: string) {
+  /** Taking up an invitation consumes it: the link leaves the address bar. */
+  function begin() {
+    clearInviteFromUrl();
+    journey.begin();
+  }
+
+  function pick(choice: string) {
     if (pending) return;
-    setChosen(choice);
+    setPicked(choice);
     void send(choice);
   }
 
-  const asking = phase === "understanding" || phase === "focus";
-  const kind = phase === "understanding" ? "text" : prompt.kind;
-  const canContinue = kind === "scale" ? level !== null : text.trim().length > 0;
+  /** Only text and scale need a separate confirmation; a tap is its own answer. */
+  const needsConfirm = phase === "naming" || (step?.move === "clarify" && step.kind !== "choice");
+  const canConfirm =
+    step?.move === "clarify" && step.kind === "scale" ? level !== null : text.trim().length > 0;
 
-  function submitCurrent() {
+  function confirm() {
     if (pending) return;
-    if (kind === "scale" && level !== null) void send(`${level} out of 10`);
-    else if (text.trim()) void send(text);
+    if (step?.move === "clarify" && step.kind === "scale" && level !== null) {
+      void send(`${level} out of 10`);
+    } else if (text.trim()) {
+      void send(text);
+    }
   }
+
+  const headline = phase === "naming" ? OPENING : (step?.text ?? "");
+  const carried = phase !== "naming" && step?.move !== "reflect" ? verdict?.reason : null;
+
+  const synthesis = useMemo(
+    () => verdict?.synthesis?.trim() || verdict?.reason?.trim() || "",
+    [verdict],
+  );
 
   return (
     <>
@@ -75,51 +104,100 @@ function LockApp() {
         <div className="lock-column">
           <header className="lock-chrome">
             <LockMark progress={journey.certainty} pulsing={pending} />
+            {journey.canGoBack && phase === "working" && !pending && (
+              <button type="button" onClick={journey.back} className="chrome-back">
+                Back
+              </button>
+            )}
           </header>
 
           <section className="lock-stage" data-phase={phase} data-pending={pending || undefined}>
             {phase === "idle" && (
               <div className="state-enter">
-                <h1 className="type-display">
-                  One decision at a time.
-                  <span className="type-display-dim"> Then it closes.</span>
-                </h1>
+                {invite ? (
+                  <>
+                    <p className="type-meta">
+                      {invite.from ? `${invite.from} sent you this` : "Someone sent you this"}
+                    </p>
+                    <h1 className="type-display invite-prompt">{invite.prompt}</h1>
+                  </>
+                ) : (
+                  <h1 className="type-display">
+                    One decision at a time.
+                    <span className="type-display-dim"> Then it closes.</span>
+                  </h1>
+                )}
               </div>
             )}
 
-            {asking && (
+            {(phase === "naming" || phase === "working") && (
               <div
-                key={prompt.text}
+                key={stepKey}
                 className="state-enter"
                 data-answering={text.trim().length > 0 || level !== null || undefined}
               >
-                {phase === "focus" && verdict?.reason && (
-                  <p className="read-line">{verdict.reason}</p>
+                {carried && <p className="read-line">{carried}</p>}
+
+                {step?.move === "reflect" ? (
+                  <p className="type-reflection">{headline}</p>
+                ) : (
+                  <h2 className="type-question">{headline}</h2>
                 )}
-                <h2 className="type-question">{prompt.text}</h2>
 
                 <div className="answer-zone">
-                  {kind === "text" && (
+                  {phase === "naming" && (
                     <AnswerField
                       value={text}
                       onChange={setText}
-                      onSubmit={submitCurrent}
+                      onSubmit={confirm}
                       disabled={pending}
                       autoFocus
-                      placeholder={
-                        phase === "understanding" ? "Name it plainly" : "In your own words"
-                      }
+                      placeholder={invite ? "Your call" : "Name it plainly"}
                     />
                   )}
-                  {kind === "choice" && prompt.choices && (
+
+                  {step?.move === "reflect" && (
+                    <Reflection onRespond={pick} disabled={pending} answered={picked} />
+                  )}
+
+                  {step?.move === "tradeoff" && (
+                    <Tradeoff
+                      a={step.a}
+                      b={step.b}
+                      lean={step.lean}
+                      onPick={pick}
+                      disabled={pending}
+                      picked={picked}
+                    />
+                  )}
+
+                  {step?.move === "choose" && (
                     <ChoiceList
-                      choices={prompt.choices}
-                      selected={chosen}
-                      onSelect={choose}
+                      choices={step.choices}
+                      selected={picked}
+                      onSelect={pick}
                       disabled={pending}
                     />
                   )}
-                  {kind === "scale" && (
+
+                  {step?.move === "clarify" && step.kind === "choice" && step.choices && (
+                    <ChoiceList
+                      choices={step.choices}
+                      selected={picked}
+                      onSelect={pick}
+                      disabled={pending}
+                    />
+                  )}
+                  {step?.move === "clarify" && step.kind === "text" && (
+                    <AnswerField
+                      value={text}
+                      onChange={setText}
+                      onSubmit={confirm}
+                      disabled={pending}
+                      autoFocus
+                    />
+                  )}
+                  {step?.move === "clarify" && step.kind === "scale" && (
                     <ScaleControl
                       value={level}
                       onChange={setLevel}
@@ -133,13 +211,19 @@ function LockApp() {
 
             {phase === "ready" && (
               <div className="state-enter">
-                <p className="read-line">{verdict?.reason ?? "This is ready."}</p>
+                <p className="read-line">{verdict?.reason ?? "This is yours to make."}</p>
                 <h2 className="type-statement">{decision}</h2>
               </div>
             )}
 
             {phase === "locked" && seal && (
-              <SealCard seal={seal} decision={decision} statement={verdict?.reason ?? ""} />
+              <LockResult
+                seal={seal}
+                decision={decision}
+                synthesis={synthesis}
+                format={format}
+                onToggleFormat={() => setFormat((f) => (f === "story" ? "square" : "story"))}
+              />
             )}
 
             {phase === "refused" && (
@@ -151,35 +235,47 @@ function LockApp() {
           </section>
 
           <div className="lock-dock">
-            {error && (
-              <button type="button" onClick={journey.dismissError} className="lock-notice">
-                {error}
-              </button>
+            {failed && (
+              <div className="lock-notice">
+                <span>Something interrupted the lock.</span>
+                <button type="button" onClick={() => void journey.retry()} className="notice-retry">
+                  Try again
+                </button>
+              </div>
             )}
 
             {phase === "idle" && (
-              <button type="button" onClick={journey.begin} className="action action--primary">
-                Begin
+              <button type="button" onClick={begin} className="action action--primary">
+                {invite ? "Take it" : "Begin"}
               </button>
             )}
 
-            {asking && kind !== "choice" && (
+            {needsConfirm && (
               <button
                 type="button"
-                onClick={submitCurrent}
-                disabled={!canContinue || pending}
+                onClick={confirm}
+                disabled={!canConfirm || pending}
                 className="action action--quiet action--conditional"
-                data-shown={canContinue || undefined}
+                data-shown={canConfirm || undefined}
               >
                 Continue
               </button>
             )}
 
-            {phase === "ready" && <SlideToLock onConfirm={journey.confirmLock} />}
+            {phase === "ready" && (
+              <div className="commit-dock">
+                <SlideToLock onConfirm={journey.confirmLock} />
+              </div>
+            )}
 
             {phase === "locked" && seal && (
               <>
-                <ShareAction seal={seal} decision={decision} statement={verdict?.reason ?? ""} />
+                <ShareActions
+                  seal={seal}
+                  decision={decision}
+                  synthesis={synthesis}
+                  format={format}
+                />
                 <button type="button" onClick={journey.reset} className="action-plain">
                   Lock another
                 </button>

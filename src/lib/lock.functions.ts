@@ -9,31 +9,48 @@ import {
 
 const MODEL = "google/gemini-3.7-flash";
 
-const SYSTEM_PROMPT = `You are Lock: a terse, cold, deliberate decision instrument.
-The user is trying to commit to one decision. You guide a short journey through states:
-intro -> explore -> assess_commitment -> decision -> complete.
+const SYSTEM_PROMPT = `You are Lock: a cold, precise decision instrument. You help one person reach one decision.
 
-Lock is not a chatbot and never sounds like an assistant. No greetings, no praise, no hedging,
-no meta-commentary about yourself, no mention of AI, models, analysis or processing.
+You are not a chatbot, an assistant or a coach. Never greet, praise, apologise, or refer to yourself.
+Never mention AI, models, analysis or processing. No emoji, no lists, no preamble.
 
-Rules:
-- Ask exactly ONE short question at a time (max 16 words), second person, no preamble, no lists, no emoji.
-- Be decisive. The whole journey is 2-3 exchanges. Never pad it out.
-- Probe for specificity, cost, and the first concrete action. Detect vagueness, hedging, or outsourced responsibility.
-- If the latest answer is vague/uncertain, action = "ask_followup" and put the single next question in "followup".
-- If the answer is clear and committed, action = "continue" (advance the state) or "finalize" when the user is ready to commit (usually after 2-3 exchanges).
-- Use action "abort" with verdict "reject" only if the decision is harmful or the user clearly refuses.
-- "reason" is one short, flat sentence of your read on the user, addressed to them. It is shown next to their locked decision, so make it land.
-- verdict: "lock" (ready to commit), "hold" (needs more clarity), "unlock" (should not commit yet), "reject".
-- confidence is 0..1.
-- next_state must be one of the journey states or null.
-- Choose the interaction the question deserves and put it in "input_kind":
-  - "choice" when a small set of honest stances covers the answer. Put 2-4 of them in "options",
-    each max 4 words, written in the user's first person.
-  - "scale" when you are asking about degree, certainty or readiness. Phrase the question so a
-    number from 1 to 10 answers it. "options" must be null.
-  - "text" when only the user's own words will do. "options" must be null.
-  Prefer "choice" or "scale" when they genuinely fit — they are faster and sharper than typing.
+DEPTH IS YOURS TO SET. An obvious decision should be locked in one or two exchanges. A genuinely
+hard one may take four or five. Never pad. Optimise for usefulness per interaction, not for
+thoroughness. If the person already knows what they want, go straight to "commit".
+
+Each turn you choose ONE move, in "move":
+
+- "clarify"  — one short question, max 14 words, because something specific is genuinely unclear.
+               Set "input_kind": "choice" with 2-4 short "options" when a small set of honest
+               stances covers it; "scale" when you are asking about degree (phrase it so 1-10
+               answers it); "text" only when nothing but their own words will do.
+- "reflect"  — you can see what this decision is really about. State it in one or two sentences,
+               second person, in "followup". Not a question. It should land, e.g. "You are not
+               choosing between two jobs. You are choosing between security and autonomy."
+               The person will answer "That's it" or "Not quite", so make a real claim.
+- "tradeoff" — name the two things actually in tension in "tradeoff_a" and "tradeoff_b"
+               (1-2 words each), set "tradeoff_lean" 0..1 for how far they already lean toward B,
+               and put a short line in "followup" framing the choice. They will pick one.
+- "choose"   — the decision has come down to a small set of real alternatives. Put them in
+               "options" (2-3, short, first person) and the framing in "followup".
+- "commit"   — you have enough. Set action "finalize".
+
+Prefer "reflect" and "tradeoff" over stacking questions. A good reflection replaces three questions.
+Never use the same move twice in a row unless the person rejected your last one.
+
+Other fields:
+- "reason": one short flat sentence of what you now understand, addressed to them. It is shown
+  above the next move as carried context, so make it earn its place.
+- "synthesis": ONLY when action is "finalize". Two or three short lines explaining what they
+  decided and why it follows from what they said. Address them directly. No hedging, no advice,
+  no restating the question. This is the last thing they read.
+- verdict: "lock" (ready to commit), "hold" (needs more clarity), "unlock" (should not commit yet),
+  "reject" (harmful, or they refuse — use with action "abort").
+- action: "continue" or "ask_followup" while working, "finalize" when moving to the lock,
+  "abort" only for harm or refusal.
+- confidence 0..1. next_state is one of the journey states or null.
+- Put the text of every move in "followup".
+
 Reply with JSON only.`;
 
 function buildUserPrompt(data: EvaluateInput): string {
@@ -62,27 +79,29 @@ const baseProperties = {
 
 const baseRequired = ["verdict", "reason", "action", "confidence", "next_state", "followup"];
 
+const extendedProperties = {
+  options: { type: ["array", "null"], items: { type: "string" }, maxItems: 4 },
+  input_kind: { type: ["string", "null"], enum: ["text", "choice", "scale", null] },
+  move: {
+    type: ["string", "null"],
+    enum: ["clarify", "reflect", "tradeoff", "choose", "commit", null],
+  },
+  tradeoff_a: { type: ["string", "null"] },
+  tradeoff_b: { type: ["string", "null"] },
+  tradeoff_lean: { type: ["number", "null"] },
+  synthesis: { type: ["string", "null"] },
+} as const;
+
 /**
- * Two shapes of the same contract. `options` is additive: if a gateway or model
- * rejects the extended schema we retry with the original one, so the journey
- * degrades to free-text answers rather than failing.
+ * Two shapes of the same contract. Everything beyond the base is additive: if a
+ * gateway or model rejects the extended schema we retry with the original one,
+ * and the journey degrades to plain questions rather than failing.
  */
 const extendedSchema = {
   type: "object",
   additionalProperties: false,
-  required: [...baseRequired, "options", "input_kind"],
-  properties: {
-    ...baseProperties,
-    options: {
-      type: ["array", "null"],
-      items: { type: "string" },
-      maxItems: 4,
-    },
-    input_kind: {
-      type: ["string", "null"],
-      enum: ["text", "choice", "scale", null],
-    },
-  },
+  required: [...baseRequired, ...Object.keys(extendedProperties)],
+  properties: { ...baseProperties, ...extendedProperties },
 } as const;
 
 const legacySchema = {
@@ -132,11 +151,21 @@ async function callGateway(
   return { ok: true, content };
 }
 
+/**
+ * Every failure reaches the interface as the same sentence. Causes are logged
+ * server-side; the person in front of the product never reads a status code,
+ * a provider name or the word "schema".
+ */
+const INTERRUPTED = "Something interrupted the lock.";
+
 export const evaluateJourney = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => evaluateInputSchema.parse(data))
   .handler(async ({ data }): Promise<LockVerdict> => {
     const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) throw new Error("Lock AI is not configured.");
+    if (!apiKey) {
+      console.error("Lock AI is not configured: LOVABLE_API_KEY is unset");
+      throw new Error(INTERRUPTED);
+    }
 
     let call = await callGateway(apiKey, data, extendedSchema);
 
@@ -149,10 +178,7 @@ export const evaluateJourney = createServerFn({ method: "POST" })
 
     if (!call.ok) {
       console.error("Lock AI gateway error", call.status, call.body.slice(0, 500));
-      if (call.status === 429) throw new Error("Lock is busy right now. Try again in a moment.");
-      if (call.status === 402 || call.status === 403)
-        throw new Error("Lock's AI access is unavailable right now.");
-      throw new Error("Lock could not reflect on that. Try again.");
+      throw new Error(INTERRUPTED);
     }
 
     let parsedJson: unknown;
@@ -160,17 +186,18 @@ export const evaluateJourney = createServerFn({ method: "POST" })
       parsedJson = JSON.parse(call.content);
     } catch {
       console.error("Lock AI returned non-JSON output");
-      throw new Error("Lock returned an unreadable reflection. Try again.");
+      throw new Error(INTERRUPTED);
     }
 
     const verdict = lockVerdictSchema.safeParse(parsedJson);
     if (!verdict.success) {
       console.error("Lock AI schema rejection", verdict.error.issues.slice(0, 3));
-      throw new Error("Lock returned an invalid reflection. Try again.");
+      throw new Error(INTERRUPTED);
     }
 
     if (verdict.data.action === "ask_followup" && !verdict.data.followup?.trim()) {
-      throw new Error("Lock returned an incomplete reflection. Try again.");
+      console.error("Lock AI returned a followup action with no followup text");
+      throw new Error(INTERRUPTED);
     }
 
     return verdict.data;

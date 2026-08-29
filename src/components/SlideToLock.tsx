@@ -19,9 +19,9 @@ type Props = {
   className?: string;
 };
 
-const TRACK_H = 56; // px — compact, still a comfortable thumb target
-const KNOB = 46; // px
-const INSET = 5; // px — knob inset inside the track
+const TRACK_H = 50; // px — compact; the knob still clears the 44px target
+const KNOB = 42; // px
+const INSET = 4; // px — knob inset inside the track
 
 /** Travel fraction at which the gesture commits. Effectively "the far end". */
 const COMMIT_AT = 0.985;
@@ -30,10 +30,12 @@ const MAGNET_FROM = 0.86;
 const MAGNET_STRENGTH = 0.22;
 
 /**
- * Total seal choreography: the shackle snaps, the control settles (320ms), one
- * pass of light crosses the glass (60-360ms), then the state resolves.
+ * The lock moment, in full: the shackle claps shut, the control settles into
+ * the end of the track, one pass of light crosses the glass, the label turns
+ * over, and only then does the state resolve. Long enough to be seen — and to
+ * read on its own in a two-second screen recording.
  */
-const SEAL_MS = 380;
+const SEAL_MS = 1040;
 
 const SPRINGS: Record<DriveMode, { k: number; damping: number }> = {
   // Stiff enough to sit under the finger, soft enough to carry mass.
@@ -405,8 +407,9 @@ export function SlideToLock({
         </div>
       </div>
 
-      <p className="lock-control-caption" aria-live="polite">
-        {sealing ? "Sealed" : "Hold and drag"}
+      {/* The track carries the instruction; this exists for screen readers. */}
+      <p className="sr-only" aria-live="polite">
+        {sealing ? "Locked" : "Hold and drag the control to the end to lock"}
       </p>
     </div>
   );

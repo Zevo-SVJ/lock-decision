@@ -29,16 +29,6 @@ export function createSeal(at: Date = new Date()): LockSeal {
   return { id: `LK-${chars.slice(0, 4)}-${chars.slice(4, 8)}`, at: at.toISOString() };
 }
 
-/** Stable 32-bit hash — drives the seal's generated mark. */
-export function hashSeal(id: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < id.length; i += 1) {
-    h ^= id.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return h >>> 0;
-}
-
 /** e.g. "29 AUG 2026 · 18:53 UTC" */
 export function formatSealTime(iso: string): string {
   const d = new Date(iso);
@@ -61,20 +51,4 @@ export function formatSealTime(iso: string): string {
   return `${pad(d.getUTCDate())} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()} · ${pad(
     d.getUTCHours(),
   )}:${pad(d.getUTCMinutes())} UTC`;
-}
-
-/** The text that travels: identifier, decision, statement, moment. */
-export function buildShareText(seal: LockSeal, decision: string, statement: string): string {
-  return [
-    `LOCKED · ${seal.id}`,
-    "",
-    decision,
-    statement ? `\n${statement}` : "",
-    "",
-    formatSealTime(seal.at),
-  ]
-    .filter((line) => line !== undefined)
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
 }

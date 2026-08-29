@@ -17,8 +17,14 @@ const OPEN_ANGLE = 34;
 /** Body of the lock — constant; only the shackle moves. */
 export const BODY = { x: 4.6, y: 10.6, width: 14.8, height: 9.4, radius: 3.2 } as const;
 
-/** The shackle, drawn seated. Opening is expressed as rotation about HINGE. */
-export const SHACKLE_PATH = "M8.2 10.6V7.6a3.8 3.8 0 0 1 7.6 0v3";
+/**
+ * The shackle, drawn seated. Opening is expressed as rotation about HINGE.
+ *
+ * The legs stop just short of the body so their round caps finish underneath
+ * the body's stroke — at glyph size that is invisible, but the same geometry
+ * is drawn at 360px on the share card, where a protruding cap would show.
+ */
+export const SHACKLE_PATH = "M8.2 10.2V7.6a3.8 3.8 0 0 1 7.6 0v2.6";
 
 export type GlyphPose = {
   /** Degrees to rotate the shackle about the hinge. 0 = shut. */
