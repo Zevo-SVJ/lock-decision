@@ -33,12 +33,15 @@ const MAGNET_FROM = 0.86;
 const MAGNET_STRENGTH = 0.22;
 
 /**
- * The lock moment, in full: the shackle claps shut, the control settles into
- * the end of the track, one pass of light crosses the glass, the label turns
- * over, and only then does the state resolve. Long enough to be seen — and to
- * read on its own in a two-second screen recording.
+ * The lock moment: the shackle claps shut, the capsule contracts away to the
+ * right until only the closed lock is left, and the lock takes one small
+ * physical knock as it seats. Under a second, and readable on its own in a
+ * two-second screen recording.
+ *
+ * The individual beats live in CSS (`seal-*`); this is only the total, after
+ * which the state is allowed to turn over.
  */
-const SEAL_MS = 1040;
+const SEAL_MS = 900;
 
 const SPRINGS: Record<DriveMode, { k: number; damping: number }> = {
   // Stiff enough to sit under the finger, soft enough to carry mass.
@@ -101,6 +104,9 @@ export function SlideToLock({
     const knob = knobRef.current;
     if (!track || !knob) return;
     maxRef.current = Math.max(1, track.clientWidth - knob.offsetWidth - INSET * 2);
+    // How much of the capsule survives the collapse: everything to the right
+    // of this is the lock itself. Measured, so the seal holds at any size.
+    rootRef.current?.style.setProperty("--knob-span", `${knob.offsetWidth + INSET}px`);
   }, []);
 
   useEffect(() => {
@@ -159,8 +165,8 @@ export function SlideToLock({
   }, []);
 
   /**
-   * The seal: the shackle snaps shut, the control stabilises, one pass of
-   * light crosses the glass, then the state resolves. Kept under half a second.
+   * The seal. Everything continuous stops here: the knob is parked at the end,
+   * the gesture is released, and the rest is choreography the CSS owns.
    */
   const commit = useCallback(() => {
     if (committedRef.current) return;

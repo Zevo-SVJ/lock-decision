@@ -19,7 +19,7 @@ type Props = {
  *
  * Deliberately dumb: no reveal, no observer, no entrance. Sections arrive
  * because the reader scrolled to them. Motion on this page is reserved for the
- * two places where it means something — the narrowing scene and the lock.
+ * two places it means something — the sequence, and the lock.
  */
 export function Section({ eyebrow, title, lead, wide, flush, className, children }: Props) {
   return (

@@ -534,15 +534,6 @@
   }
 }
 
-@keyframes sheen-pass {
-  from {
-    transform: translate3d(-160%, 0, 0);
-  }
-  to {
-    transform: translate3d(420%, 0, 0);
-  }
-}
-
 /* While the hand is on it, nothing else on the control moves. */
 .lock-control.is-engaged .lock-track-sheen::before {
   animation: none;
@@ -665,75 +656,128 @@
 }
 
 /* Sealed: shut, stabilised, lit once. */
-.lock-control.is-sealed .lock-track {
-  border-color: oklch(1 0 0 / 24%);
-  animation: seal-settle 420ms var(--ease-system) both;
-}
+/* ================================================================== *
+ * The seal
+ *
+ * slide -> lock -> click -> done, in four beats and under a second:
+ *
+ *   0-130ms    the shut lock is simply true, and held there
+ *   130-430ms  the capsule contracts away to the right
+ *   430-620ms  the lock takes the knock of seating
+ *   620-900ms  it rests, and only then does the state turn over
+ *
+ * The knob's transform is written from the animation loop, so the jolt has to
+ * carry the parked position with it — hence `--x` inside the keyframe. A CSS
+ * animation outranks an inline style, and without it the lock would snap back
+ * to the start of the track for the length of the knock.
+ * ================================================================== */
 
-.lock-control.is-sealed .lock-track-sheen::before {
-  opacity: 1;
-  animation: sheen-pass 520ms var(--ease-system) 180ms 1 both;
-}
-
-/* The shackle claps shut: a short mechanical recoil, not a bounce. */
+/* 1 — the shackle claps shut. */
 .lock-control.is-sealed .lock-knob-glyph {
-  animation: glyph-clap 300ms var(--ease-system) both;
+  opacity: 1;
+  animation: glyph-clap 200ms var(--ease-system) both;
 }
 
 @keyframes glyph-clap {
   0% {
     transform: scale(1);
   }
-  34% {
-    transform: scale(0.88);
+  40% {
+    transform: scale(0.9);
   }
   100% {
     transform: scale(1);
   }
 }
 
+/* 2 — everything written on the capsule leaves before the capsule does. */
+.lock-control.is-sealed .lock-track-label,
+.lock-control.is-sealed .lock-track-travelled,
+.lock-control.is-sealed .lock-track-edge,
+.lock-control.is-sealed .lock-track-terminus,
+.lock-control.is-sealed .lock-track-sheen {
+  animation: seal-clear 120ms linear 110ms both;
+}
+
+@keyframes seal-clear {
+  to {
+    opacity: 0;
+  }
+}
+
+/* 3 — the capsule contracts to the right until only the lock is left. */
+.lock-control.is-sealed .lock-track {
+  animation: seal-collapse 300ms cubic-bezier(0.36, 0, 0.12, 1) 130ms both;
+}
+
+/*
+ * Clipping alone leaves the capsule's own gradient, hairline and inset shadow
+ * as a ring around the lock, which is not "the interface disappears" — so
+ * every decorative property goes with it.
+ */
+@keyframes seal-collapse {
+  from {
+    clip-path: inset(0 0 0 0 round 999px);
+    border-color: oklch(1 0 0 / 20%);
+    background-color: oklch(0.185 0.004 264 / 62%);
+    background-image: linear-gradient(180deg, oklch(0 0 0 / 26%), oklch(1 0 0 / 2.5%));
+    box-shadow:
+      inset 0 1px 1.5px oklch(0 0 0 / 42%),
+      inset 0 -1px 0 oklch(1 0 0 / 6%),
+      0 1px 0 oklch(1 0 0 / 4%);
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+  }
+  to {
+    clip-path: inset(0 0 0 calc(100% - var(--knob-span, 3rem)) round 999px);
+    border-color: transparent;
+    background-color: transparent;
+    background-image: linear-gradient(180deg, transparent, transparent);
+    box-shadow:
+      inset 0 1px 1.5px transparent,
+      inset 0 -1px 0 transparent,
+      0 1px 0 transparent;
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+  }
+}
+
+/* 4 — the knock. Small enough to feel mechanical rather than animated. */
 .lock-control.is-sealed .lock-knob {
+  animation: seal-jolt 190ms cubic-bezier(0.2, 0.9, 0.3, 1) 430ms both;
   box-shadow:
     0 1px 1px oklch(0 0 0 / 38%),
     0 8px 18px -9px oklch(0 0 0 / 82%),
     inset 0 1px 0 oklch(1 0 0 / 60%),
-    0 0 0 7px oklch(1 0 0 / 5%),
+    0 0 0 7px oklch(1 0 0 / 4%),
     0 0 26px -8px var(--signal);
 }
 
-.lock-control.is-sealed .lock-knob-glyph {
-  opacity: 1;
-}
-
-@keyframes seal-settle {
+@keyframes seal-jolt {
   0% {
-    transform: scale(1);
+    transform: translate3d(var(--x), 0, 0) scale(1) rotate(0deg);
   }
   26% {
-    transform: scale(0.975);
+    transform: translate3d(var(--x), 0.5px, 0) scale(0.955) rotate(-1.1deg);
   }
-  70% {
-    transform: scale(1.004);
+  58% {
+    transform: translate3d(var(--x), 0, 0) scale(1.018) rotate(0.5deg);
   }
   100% {
-    transform: scale(1);
+    transform: translate3d(var(--x), 0, 0) scale(1) rotate(0deg);
   }
 }
 
-/* The last beat: the control quiets before the state turns over. */
-.lock-control.is-sealed .lock-track-travelled {
-  animation: seal-fill 720ms var(--ease-system) both;
-}
+/* Without motion the collapse is a cut, not a move. */
+@media (prefers-reduced-motion: reduce) {
+  .lock-control.is-sealed .lock-track {
+    animation-duration: 1ms;
+    animation-delay: 60ms;
+  }
 
-@keyframes seal-fill {
-  from {
-    opacity: 0.6;
-  }
-  60% {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.85;
+  .lock-control.is-sealed .lock-knob,
+  .lock-control.is-sealed .lock-knob-glyph {
+    animation: none;
   }
 }
 
@@ -1614,33 +1658,33 @@ svg.lock-knob-glyph {
 /* ================================================================== *
  * THE LANDING PAGE
  *
- * Editorial, not brochure. The page is built out of type, rule lines and
- * fragments of the real product — no card grids, no glass panels floating on
- * gradients, no illustration standing in for a screenshot.
+ * Type, space, and the product's own control. There is exactly one raised
+ * surface on the whole page (the artefact) and no cards anywhere else — every
+ * other section sits directly on the ground with nothing but a hairline and a
+ * lot of air around it.
  *
- * It also gets quieter as it goes. The top of the page has the most on it;
- * by the lock there is a line of text and a control on an empty ground. That
- * fall in density is the argument, so nothing may be added back into the
- * lower half without a reason.
+ * The page also alternates motion and stillness deliberately. Two things move:
+ * the sequence and the lock. Everything between them is completely still, so
+ * that when something does move it reads as an event.
  * ================================================================== */
+
+:root {
+  --gutter: clamp(1.375rem, 6vw, 3.5rem);
+  /* One measure for prose, so no two sections read at different widths. */
+  --measure: 33rem;
+  /* The accent. Interaction, weight, confirmation — nothing decorative. */
+  --blue: oklch(0.72 0.115 242);
+  --blue-soft: oklch(0.72 0.115 242 / 18%);
+}
 
 .page {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 68rem;
+  max-width: 66rem;
   margin-inline: auto;
   padding-inline: var(--gutter);
-  padding-bottom: max(4rem, env(safe-area-inset-bottom));
-}
-
-:root {
-  --gutter: clamp(1.25rem, 6vw, 3.5rem);
-  /* One measure for prose, so no two sections read at different widths. */
-  --measure: 34rem;
-  /* The accent. Interaction, active state, confirmation — nothing else. */
-  --blue: oklch(0.72 0.115 242);
-  --blue-soft: oklch(0.72 0.115 242 / 16%);
+  padding-bottom: max(3rem, env(safe-area-inset-bottom));
 }
 
 /* ------------------------------- type ------------------------------- */
@@ -1648,28 +1692,28 @@ svg.lock-knob-glyph {
 .eyebrow {
   font-size: 0.625rem;
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--fg-3);
 }
 
 .section-title {
-  max-width: 20ch;
-  font-size: clamp(1.75rem, 6.2vw, 2.75rem);
-  line-height: 1.12;
-  letter-spacing: -0.032em;
+  max-width: 18ch;
+  font-size: clamp(1.875rem, 6.6vw, 2.625rem);
+  line-height: 1.1;
+  letter-spacing: -0.034em;
   font-weight: 500;
   color: var(--fg-1);
   text-wrap: balance;
 }
 
 .eyebrow + .section-title {
-  margin-top: 1.125rem;
+  margin-top: 1.25rem;
 }
 
 .section-lead {
-  margin-top: 1.25rem;
-  max-width: 44ch;
+  margin-top: 1.375rem;
+  max-width: 42ch;
   font-size: 1rem;
   line-height: 1.6;
   letter-spacing: -0.008em;
@@ -1683,7 +1727,7 @@ svg.lock-knob-glyph {
   align-items: center;
   justify-content: center;
   height: 3rem;
-  padding-inline: 1.625rem;
+  padding-inline: 1.75rem;
   border-radius: 999px;
   font-size: 0.9375rem;
   font-weight: 500;
@@ -1697,7 +1741,7 @@ svg.lock-knob-glyph {
 }
 
 .btn:active {
-  transform: scale(0.975);
+  transform: scale(0.972);
 }
 
 .btn--primary {
@@ -1746,276 +1790,177 @@ svg.lock-knob-glyph {
   letter-spacing: 0.02em;
 }
 
-/* -------------------------------- hero ------------------------------- */
+/* ================================================================== *
+ * HERO
+ *
+ * Four things and a lot of nothing. The gesture is the only object; it is not
+ * enlarged for the web, because the point is that this is exactly the control
+ * that ends a real decision.
+ * ================================================================== */
 
 .hero {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding-block: clamp(1.75rem, 5vh, 4rem) clamp(3.5rem, 11vh, 6rem);
+  align-items: center;
+  min-height: min(78svh, 46rem);
+  padding-block: clamp(3rem, 12vh, 7rem) clamp(3.5rem, 12vh, 7rem);
+  text-align: center;
 }
 
 .hero-title {
-  max-width: 15ch;
-  font-size: clamp(2.375rem, 10.5vw, 4rem);
-  line-height: 1.04;
-  letter-spacing: -0.04em;
+  max-width: 12ch;
+  font-size: clamp(3rem, 14vw, 5.25rem);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
   font-weight: 500;
   color: var(--fg-1);
   text-wrap: balance;
 }
 
 .hero-sub {
-  margin-top: 1.125rem;
-  max-width: 40ch;
-  font-size: clamp(1rem, 4.2vw, 1.125rem);
-  line-height: 1.5;
-  letter-spacing: -0.012em;
-  color: var(--fg-2);
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.875rem 1.125rem;
-  margin-top: 1.75rem;
-}
-
-.hero-terms {
-  font-size: 0.8125rem;
-  color: var(--fg-3);
-}
-
-.hero-after {
   margin-top: 1.5rem;
   max-width: 34ch;
-  font-size: 0.875rem;
+  font-size: clamp(0.9375rem, 3.9vw, 1.0625rem);
   line-height: 1.55;
-  color: var(--fg-3);
-  opacity: 0;
-  transform: translate3d(0, 6px, 0);
-  transition:
-    opacity var(--t-material) var(--ease-system) 200ms,
-    transform var(--t-material) var(--ease-system) 200ms;
-}
-
-.hero-after[data-shown] {
-  opacity: 1;
-  transform: none;
-}
-
-/* -------------------------- the product card ------------------------- */
-
-/*
- * The one raised surface on the page. Everything else sits directly on the
- * ground, so this reads as "the product" rather than as decoration.
- */
-.card {
-  width: 100%;
-  max-width: 30rem;
-  margin-top: clamp(1.75rem, 5vh, 3rem);
-  padding: 1.25rem 1.25rem 1.375rem;
-  border-radius: 1.5rem;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, oklch(1 0 0 / 5%), oklch(1 0 0 / 1.5%)) padding-box,
-    var(--background);
-  box-shadow: 0 32px 64px -48px oklch(0 0 0 / 95%);
-  transition: border-color var(--t-material) linear;
-}
-
-.card[data-locked] {
-  border-color: var(--blue-soft);
-}
-
-.card-decision {
-  margin-top: 0.75rem;
-  font-size: clamp(1.25rem, 5vw, 1.5rem);
-  line-height: 1.28;
-  letter-spacing: -0.024em;
-  color: var(--fg-1);
-}
-
-.card-read {
-  margin-block: 1.375rem;
-  padding-top: 1.125rem;
-  border-top: 1px solid var(--line-faint);
-}
-
-.card-read-line {
-  margin-top: 0.625rem;
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  letter-spacing: -0.01em;
   color: var(--fg-2);
   text-wrap: pretty;
 }
 
-.card-seal {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 3rem;
-  padding-inline: 1rem;
-  border-radius: 999px;
-  border: 1px solid var(--blue-soft);
-  background: oklch(0.72 0.115 242 / 7%);
-  animation: state-enter var(--t-state) var(--ease-system) both;
+.hero-cta {
+  margin-top: 2rem;
 }
 
-.card-seal-id {
-  font-size: 0.75rem;
-  color: var(--blue);
+/* The control, directly under the button it makes redundant. */
+.hero-gesture {
+  margin-top: clamp(3rem, 10vh, 4.5rem);
 }
 
-.card-seal-time {
+.hero-caption {
+  position: relative;
+  height: 1rem;
+  margin-top: 1.25rem;
+}
+
+.hero-caption-line {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
   font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--fg-3);
+  transition:
+    opacity 240ms var(--ease-system),
+    transform 240ms var(--ease-system);
 }
 
-/* ------------------------------ sections ----------------------------- */
-
-.section {
-  max-width: var(--measure);
-  padding-block: clamp(4rem, 13vh, 7rem);
-  border-top: 1px solid var(--line-faint);
+.hero-caption-line[data-out] {
+  opacity: 0;
+  transform: translate3d(0, -4px, 0);
 }
 
-.section--wide {
-  max-width: 52rem;
+.hero-caption-line--in {
+  opacity: 0;
+  transform: translate3d(0, 4px, 0);
+  color: var(--fg-2);
 }
 
-/* A heading that belongs to what comes after it, not to itself. */
-.section--flush {
-  padding-bottom: 0;
+.hero-caption-line--in[data-in] {
+  /* Only once the seal has actually finished playing. */
+  transition-delay: 620ms;
+  opacity: 1;
+  transform: none;
 }
 
-/* ------------------------------- circling ---------------------------- */
-
-/*
- * The same thought, four times. Nothing moves — the repetition is the idea,
- * and animating it would only make it look like a loading state.
- */
-.circling {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 2.5rem;
-  padding-left: 1rem;
-  border-left: 1px solid var(--line-faint);
-}
-
-.circling-line {
-  font-size: clamp(1.125rem, 4.4vw, 1.375rem);
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  color: var(--fg-1);
-}
-
-.circling-line:nth-child(2) {
-  opacity: 0.5;
-}
-.circling-line:nth-child(3) {
-  opacity: 0.26;
-}
-.circling-line:nth-child(4) {
-  opacity: 0.12;
+.hero-terms {
+  margin-top: auto;
+  padding-top: 2.5rem;
+  font-size: 0.75rem;
+  color: var(--fg-4);
 }
 
 /* ================================================================== *
- * THE SCENE
+ * THE SEQUENCE
  *
- * A tall section with a pinned stage inside it. The stage is a fixed box and
- * the factors live in reserved slots, so nothing in here can overlap anything
- * else or escape into the section below at any viewport size.
+ * A pinned frame with four fixed zones — heading, body, control, caption. Each
+ * element owns a zone and only ever moves inside it, so no two states can
+ * occupy the same space by accident. Where two states do share a zone (the
+ * signals and the answer, the decision large and small) they are separated in
+ * time instead: one is at zero opacity before the other leaves zero.
  * ================================================================== */
 
-.narrowing {
-  --pitch: clamp(2.75rem, 7.4svh, 3.375rem);
+.seq {
   height: 340svh;
 }
 
-.narrowing-pin {
+.seq-pin {
   position: sticky;
   top: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100svh;
-  /* Left-aligned like every heading on the page: a centred stage here would
-     read as a different document from the section that introduces it. */
-  max-width: 40rem;
+  /* Left-aligned like every heading below it. A centred stage here would read
+     as a different document from the sections around it. */
+  max-width: 34rem;
 }
 
-/* Without motion the scene is not a scene: it is its own end state, once. */
-.narrowing[data-still] {
-  height: auto;
-  padding-block: clamp(2rem, 6vh, 3rem) clamp(4rem, 13vh, 7rem);
-}
-
-.narrowing[data-still] .narrowing-pin {
-  position: static;
-  height: auto;
-}
-
-/*
- * The scene's bounds, stated. Everything the animation does happens inside
- * this box; it is the same surface language as the hero card, because what is
- * being shown is the product thinking, not an infographic about it.
- */
-.scene-panel {
-  width: 100%;
-  padding: clamp(1.25rem, 5vw, 1.75rem);
-  border-radius: 1.5rem;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, oklch(1 0 0 / 4%), oklch(1 0 0 / 1%)) padding-box,
-    var(--background);
-  box-shadow: 0 32px 64px -48px oklch(0 0 0 / 95%);
-}
-
-.scene-stage {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
-.scene-head {
-  flex: none;
-}
-
-.scene-decision {
-  margin-top: 0.75rem;
-  font-size: clamp(1.0625rem, 4.2vw, 1.25rem);
-  line-height: 1.3;
-  letter-spacing: -0.018em;
-  color: var(--fg-2);
-}
-
-.scene-rows {
+.seq-stage {
+  --pitch: 2.625rem;
   position: relative;
-  height: calc(var(--pitch) * 5);
+  height: 19.75rem;
+}
+
+.seq-head {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
 }
 
 /*
- * Each factor owns one slot and never leaves it. The only things that change
- * are opacity, a small horizontal offset and a scale that is never above 1 —
- * which is what makes overlap structurally impossible rather than tuned away.
+ * One element for the whole sequence. It is rendered at its large size and
+ * scaled down, never up, so the small state stays crisp; the origin is its own
+ * top-left, so shrinking pulls it into the heading slot rather than away from
+ * it. Its resting top (8.5rem) minus the heading slot (1.5rem) is the 112px
+ * lift the component applies — the two numbers have to move together.
  */
-.scene-slot {
+.seq-decision {
+  position: absolute;
+  inset-inline: 0;
+  top: 8.5rem;
+  transform-origin: left top;
+  font-size: clamp(1.75rem, 7vw, 2.375rem);
+  line-height: 1.14;
+  letter-spacing: -0.032em;
+  font-weight: 500;
+  color: var(--fg-1);
+  will-change: transform;
+}
+
+.seq-body {
+  position: absolute;
+  inset-inline: 0;
+  top: 4.5rem;
+  height: calc(var(--pitch) * 4);
+}
+
+.seq-slot {
   position: absolute;
   inset-inline: 0;
   top: calc(var(--i) * var(--pitch));
   height: var(--pitch);
 }
 
-.scene-row {
+.seq-signal {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   height: 100%;
 }
 
-.scene-row-mark {
+.seq-signal-bar {
+  flex: none;
   width: 2px;
   height: 1.125rem;
   border-radius: 999px;
@@ -2023,397 +1968,371 @@ svg.lock-knob-glyph {
   transform-origin: center;
 }
 
-.scene-row-label {
-  font-size: clamp(1.0625rem, 4.4vw, 1.3125rem);
+.seq-signal-label {
+  font-size: clamp(1rem, 4.2vw, 1.1875rem);
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.018em;
   color: var(--fg-1);
 }
 
-/* Occupies the same band as the rows, and is only ever visible once they
-   have gone — so the crossover is in time, not in space. */
-.scene-resolved {
+/* Lands where the two signals that mattered converge. */
+.seq-answer {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
-  font-size: clamp(1.375rem, 5.6vw, 1.875rem);
-  line-height: 1.2;
-  letter-spacing: -0.028em;
+  font-size: clamp(1.75rem, 7vw, 2.375rem);
+  line-height: 1.12;
+  letter-spacing: -0.032em;
+  font-weight: 500;
   color: var(--fg-1);
   text-wrap: balance;
 }
 
-.scene-resolved--still {
-  position: static;
-  margin-top: 0.75rem;
+.seq-foot {
+  position: absolute;
+  inset-inline: 0;
+  top: 16rem;
 }
 
-/* Reduced motion: the panel is a list and a conclusion, not a stage. */
-.scene-panel--still {
-  display: grid;
-  gap: 1.75rem;
+/*
+ * A replica of the control at the real control's proportions, driven by scroll
+ * rather than by a hand. The capsule is a sibling of the lock rather than its
+ * parent, so contracting it leaves the lock untouched.
+ */
+.seq-control {
+  --track-w: min(68.2vw, 19rem);
+  --track-h: calc(var(--track-w) * 215 / 798);
+  --knob: calc(var(--track-h) - 10px);
+  position: relative;
+  width: var(--track-w);
+  height: var(--track-h);
 }
 
-.still-list {
-  display: grid;
-  gap: 0.875rem;
+.seq-capsule {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  transform-origin: right center;
+  background-image: linear-gradient(180deg, oklch(0 0 0 / 26%), oklch(1 0 0 / 2.5%));
+  background-color: oklch(0.185 0.004 264 / 62%);
+  border: 1px solid oklch(1 0 0 / 11%);
+  box-shadow:
+    inset 0 1px 1.5px oklch(0 0 0 / 42%),
+    inset 0 -1px 0 oklch(1 0 0 / 6%);
 }
 
-.still-item {
+.seq-capsule-label {
+  position: absolute;
+  inset-block: 0;
+  right: calc(var(--knob) + 1.25rem);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  opacity: 0.45;
+  font-size: 0.6875rem;
+  letter-spacing: 0.34em;
+  text-transform: lowercase;
+  color: var(--fg-3);
+  white-space: nowrap;
 }
 
-.still-item[data-major] {
-  opacity: 1;
+.seq-knob {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: var(--knob);
+  height: var(--knob);
+  margin-top: calc(var(--knob) / -2);
+  border-radius: 999px;
+  color: oklch(0.155 0.004 264);
+  background: linear-gradient(
+    180deg,
+    oklch(1 0 0 / 97%) 0%,
+    oklch(0.93 0.002 264 / 94%) 52%,
+    oklch(0.86 0.003 264 / 92%) 100%
+  );
+  box-shadow:
+    0 1px 1px oklch(0 0 0 / 38%),
+    0 8px 18px -9px oklch(0 0 0 / 82%),
+    inset 0 1px 0 oklch(1 0 0 / 60%);
 }
 
-.still-item .scene-row-mark {
-  transform: scaleY(0);
-}
-
-.still-item[data-major] .scene-row-mark {
-  transform: none;
-}
-
-.scene-caption {
+/* The line under the frame, which is the sequence said in words. */
+.seq-copy {
   position: relative;
-  height: 1.25rem;
-  margin-top: 1.75rem;
+  height: 3.25rem;
+  margin-top: clamp(1.75rem, 5vh, 2.75rem);
 }
 
-.scene-caption > span {
+.seq-copy-line {
   position: absolute;
   inset-inline: 0;
   top: 0;
-  font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--fg-3);
+  font-size: clamp(1rem, 4.2vw, 1.125rem);
+  line-height: 1.4;
+  letter-spacing: -0.014em;
+  color: var(--fg-2);
 }
 
-.scene-caption--still > span {
+/* Reduced motion: the same story, laid out once and held still. */
+.seq[data-still] {
+  height: auto;
+  padding-block: clamp(3rem, 10vh, 5rem);
+}
+
+.seq[data-still] .seq-pin {
   position: static;
+  height: auto;
 }
 
-.scene-rail {
-  position: relative;
-  height: 1px;
-  margin-top: 1rem;
-  background: var(--line-faint);
-  overflow: hidden;
-}
-
-.scene-rail-fill {
-  display: block;
-  height: 100%;
-  background: var(--fg-3);
-  transform-origin: left center;
-}
-
-/* ================================================================== *
- * THE LOCK
- *
- * The bottom of the page's descent into quiet: one line, one decision, one
- * control, nothing else. No border above it — it continues the scene rather
- * than starting a new section.
- * ================================================================== */
-
-.commit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.seq-still {
+  display: grid;
   gap: 1.25rem;
-  max-width: 34rem;
-  margin-inline: auto;
-  padding-block: clamp(3.5rem, 12vh, 6rem) clamp(4.5rem, 15vh, 8rem);
-  text-align: center;
 }
 
-.commit-lead {
-  font-size: 0.875rem;
-  letter-spacing: -0.006em;
-  color: var(--fg-3);
-}
-
-.commit-decision {
-  max-width: 18ch;
-  font-size: clamp(1.625rem, 6.4vw, 2.25rem);
+.seq-still-decision,
+.seq-still-answer {
+  font-size: clamp(1.5rem, 6vw, 2rem);
   line-height: 1.14;
   letter-spacing: -0.03em;
   font-weight: 500;
   color: var(--fg-1);
-  text-wrap: balance;
 }
 
-.commit .lock-control {
-  margin-top: 1.25rem;
-}
-
-.result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-  animation: state-enter 420ms var(--ease-system) both;
-}
-
-.result-card {
-  display: block;
-  width: min(22rem, 100%);
-  height: auto;
-  border-radius: 1.25rem;
-  border: 1px solid var(--line-faint);
-  box-shadow: 0 40px 80px -50px oklch(0 0 0 / 95%);
-}
-
-.result-note {
-  max-width: 32ch;
-  font-size: 0.875rem;
-  line-height: 1.55;
-  color: var(--fg-3);
-}
-
-/* ------------------------------ benefits ----------------------------- */
-
-.benefits {
+.seq-still-list {
   display: grid;
-  gap: clamp(2.5rem, 7vh, 3.5rem);
+  gap: 0.875rem;
+}
+
+.seq-still-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0.4;
+}
+
+.seq-still-item[data-major] {
+  opacity: 1;
+}
+
+.seq-still-item .seq-signal-bar {
+  transform: scaleY(0);
+}
+
+.seq-still-item[data-major] .seq-signal-bar {
+  transform: none;
+}
+
+.seq-still-copy {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.seq-still-copy .seq-copy-line {
+  position: static;
+}
+
+/* ------------------------------ sections ----------------------------- */
+
+.section {
+  max-width: var(--measure);
+  padding-block: clamp(4.5rem, 14vh, 7.5rem);
+  border-top: 1px solid var(--line-faint);
+}
+
+.section--wide {
+  max-width: 46rem;
+}
+
+/* ================================================================== *
+ * DEPTH — two runs of the same track
+ *
+ * Different lengths, one column of locks. The alignment is the argument, so
+ * the lock stays hard right in both rows at every width.
+ * ================================================================== */
+
+.runs {
+  display: grid;
+  gap: clamp(2.25rem, 6vh, 3rem);
   margin-top: 3rem;
 }
 
-.benefit {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.benefit-n {
-  font-size: 0.6875rem;
-  color: var(--fg-4);
-}
-
-.benefit-title {
-  margin-top: 0.625rem;
-  font-size: 1.25rem;
-  line-height: 1.2;
-  letter-spacing: -0.022em;
-  font-weight: 500;
+.run-decision {
+  font-size: clamp(1.0625rem, 4.4vw, 1.25rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
   color: var(--fg-1);
 }
 
-.benefit-body {
-  margin-top: 0.625rem;
-  max-width: 38ch;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--fg-2);
-}
-
-/* Fragments of real surfaces, kept small enough that they read as evidence
-   rather than as another card. */
-.frag {
-  padding: 1rem 1.125rem;
-  border-radius: 1rem;
-  border: 1px solid var(--line-faint);
-  background: oklch(1 0 0 / 2.5%);
-}
-
-.frag-line {
-  margin-top: 0.5rem;
-  font-size: 0.9375rem;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
-  color: var(--fg-1);
-  text-wrap: pretty;
-}
-
-.frag--depth {
-  display: grid;
-  gap: 0.875rem;
-}
-
-.frag-depth-row {
+.run-track {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  height: 2.25rem;
+  margin-top: 0.875rem;
+  padding-right: 2rem;
 }
 
-.frag-dot {
-  width: 0.375rem;
-  height: 0.375rem;
+.run-line {
+  position: absolute;
+  inset-inline: 0 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line-faint), var(--line));
+}
+
+.run-beats {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* The run occupies its share of the track, so six beats plainly take longer
+     to walk than two. Seven is the longest run Lock will go to. */
+  width: calc(var(--beats, 2) / 7 * 100%);
+  min-width: 3rem;
+}
+
+.run-beats[data-beats="2"] {
+  --beats: 2;
+}
+
+.run-beats[data-beats="6"] {
+  --beats: 6;
+}
+
+.run-beat {
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: var(--fg-4);
+  box-shadow: 0 0 0 3px var(--background);
 }
 
-.frag-dot.is-end {
+.run-beat:last-child {
   background: var(--blue);
 }
 
-.frag-depth-label {
-  margin-left: 0.5rem;
+.run-end {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-top: -1rem;
+  border-radius: 999px;
+  color: var(--fg-1);
+  background: var(--background);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.run-time {
+  margin-top: 0.75rem;
   font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--fg-3);
 }
 
-.frag--seal {
+/* ================================================================== *
+ * THE HAND-OFF
+ * ================================================================== */
+
+.handoff {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  color: var(--fg-1);
-}
-
-.frag-seal-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  font-size: 0.75rem;
+  gap: clamp(0.75rem, 3vw, 1.5rem);
+  margin-top: 3.5rem;
   color: var(--fg-2);
 }
 
-.frag-seal-time {
-  font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--blue);
-}
-
-/* ---------------------------- fast or deep --------------------------- */
-
-.depth {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(1.25rem, 5vw, 2.5rem);
-  margin-top: 2.75rem;
-}
-
-.depth-steps {
-  display: grid;
+.handoff-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.625rem;
-  margin-top: 1.25rem;
-  padding-left: 0.875rem;
-  border-left: 1px solid var(--line-faint);
+  flex: none;
 }
 
-.depth-step {
-  font-size: 0.875rem;
-  line-height: 1.35;
-  color: var(--fg-3);
-}
-
-.depth-step[data-last] {
-  color: var(--fg-1);
-}
-
-.depth-note {
-  margin-top: 1.25rem;
-  font-size: 0.8125rem;
-  color: var(--fg-3);
-}
-
-/* ------------------------------- relay ------------------------------- */
-
-.relay {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2.75rem;
-  color: var(--fg-2);
-}
-
-.relay-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.relay-name {
+.handoff-name {
   font-size: 0.625rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--fg-3);
 }
 
-.relay-line {
+.handoff-wire {
   position: relative;
   flex: 1 1 auto;
   height: 1px;
+  margin-bottom: 1.25rem;
   background: var(--line);
+}
+
+/* The pulse travels past the end of the wire, so the wire has to clip it —
+   without this it is the one thing on the page that can widen the document. */
+.handoff-rail {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
-.relay-pulse {
+/* The decision itself, riding the line between two people. */
+.handoff-note {
+  position: absolute;
+  left: 50%;
+  bottom: 0.75rem;
+  transform: translateX(-50%);
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-faint);
+  background: var(--background);
+  font-size: 0.75rem;
+  letter-spacing: -0.006em;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.handoff-pulse {
   position: absolute;
   top: 0;
   left: 0;
-  width: 30%;
+  width: 28%;
   height: 100%;
   background: linear-gradient(90deg, transparent, var(--blue), transparent);
-  animation: relay-travel 3.4s var(--ease-system) infinite;
+  animation: handoff-travel 3.6s var(--ease-system) infinite;
 }
 
-@keyframes relay-travel {
+@keyframes handoff-travel {
   0% {
     transform: translateX(-110%);
   }
-  55%,
+  58%,
   100% {
-    transform: translateX(360%);
+    transform: translateX(400%);
   }
 }
 
-/* ------------------------------- pricing ----------------------------- */
+/* ================================================================== *
+ * THE ARTEFACT — the one raised surface on the page
+ * ================================================================== */
 
-.plan {
-  margin-top: 2.5rem;
-  padding: 1.5rem;
+.artifact {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+}
+
+.artifact-card {
+  display: block;
+  width: min(21rem, 100%);
+  height: auto;
   border-radius: 1.25rem;
-  border: 1px solid var(--line);
-  background: oklch(1 0 0 / 2.5%);
-}
-
-.plan-price {
-  margin-top: 0.75rem;
-  font-size: clamp(1.75rem, 6vw, 2.25rem);
-  line-height: 1;
-  letter-spacing: -0.032em;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-.plan-price-note {
-  font-size: 0.875rem;
-  font-weight: 400;
-  letter-spacing: -0.008em;
-  color: var(--fg-3);
-}
-
-.plan-list {
-  display: grid;
-  gap: 0.625rem;
-  margin-block: 1.5rem;
-  padding-top: 1.375rem;
-  border-top: 1px solid var(--line-faint);
-  font-size: 0.875rem;
-  line-height: 1.45;
-  color: var(--fg-2);
-}
-
-.plan-list li {
-  padding-left: 1.125rem;
-  background-image: radial-gradient(circle, var(--blue) 1.5px, transparent 1.5px);
-  background-size: 4px 4px;
-  background-repeat: no-repeat;
-  background-position: 1px 0.55em;
-}
-
-.plan-cta {
-  width: 100%;
+  border: 1px solid var(--line-faint);
+  box-shadow: 0 44px 80px -52px oklch(0 0 0 / 95%);
 }
 
 /* --------------------------------- faq ------------------------------- */
@@ -2477,107 +2396,110 @@ svg.lock-knob-glyph {
   color: var(--fg-2);
 }
 
-/* ------------------------------ final cta ---------------------------- */
+/* ================================================================== *
+ * THE LAST SCREEN
+ *
+ * The emptiest thing on the page: a line, the gesture, and a way out for
+ * anyone who will not drag it.
+ * ================================================================== */
 
 .final {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.75rem;
-  padding-block: clamp(4.5rem, 15vh, 8rem);
+  padding-block: clamp(5rem, 18vh, 9rem) clamp(4rem, 14vh, 7rem);
   border-top: 1px solid var(--line-faint);
   text-align: center;
 }
 
 .final-line {
-  font-size: clamp(1.875rem, 8vw, 3rem);
-  line-height: 1.06;
-  letter-spacing: -0.035em;
+  max-width: 11ch;
+  font-size: clamp(2.5rem, 11vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.042em;
   font-weight: 500;
   color: var(--fg-1);
+  text-wrap: balance;
 }
 
-.final-cta {
-  padding-inline: 2.25rem;
+.final-line-dim {
+  color: var(--fg-3);
+}
+
+.final-gesture {
+  margin-top: clamp(2.75rem, 9vh, 4rem);
+}
+
+.final-plain {
+  margin-top: 2.25rem;
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+  transition: color var(--t-micro) linear;
+}
+
+.final-plain:active,
+.final-plain:hover {
+  color: var(--fg-1);
 }
 
 /* ------------------------------- desktop ----------------------------- */
 
 @media (min-width: 52rem) {
-  .hero {
-    display: grid;
-    grid-template-columns: 1fr minmax(0, 26rem);
-    align-items: center;
-    column-gap: clamp(2.5rem, 6vw, 5rem);
-    padding-block: clamp(3rem, 8vh, 5rem) clamp(4rem, 11vh, 6.5rem);
-  }
-
   .hero-title {
-    grid-column: 1;
-    max-width: 18ch;
-    font-size: clamp(2.75rem, 4vw, 3.5rem);
+    font-size: clamp(4rem, 7vw, 5.5rem);
   }
 
-  .hero-sub,
-  .hero-actions,
-  .hero-after {
-    grid-column: 1;
+  /*
+   * The frame grows on desktop, but its vertical geometry does not: the lift
+   * is the gap between `.seq-decision`'s resting top and the heading slot, and
+   * both are set in rem, so type can scale freely without retuning the travel.
+   */
+  .seq-pin {
+    max-width: 42rem;
   }
 
-  /* The card spans the text column's rows, so the composition is one object
-     beside one argument rather than a stack that happens to be side by side. */
-  .hero-card {
-    grid-column: 2;
-    grid-row: 1 / -1;
-    align-self: center;
-    margin-top: 0;
+  .seq-stage {
+    --pitch: 3rem;
+    height: 21rem;
   }
 
-  .benefit {
+  .seq-foot {
+    top: 17.25rem;
+  }
+
+  .seq-decision,
+  .seq-answer {
+    font-size: 3rem;
+  }
+
+  .seq-signal-label {
+    font-size: 1.375rem;
+  }
+
+  .seq-copy-line {
+    font-size: 1.25rem;
+  }
+
+  .runs {
     grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: clamp(2rem, 5vw, 4rem);
-  }
-
-  /* Alternating, so the eye has to move. */
-  .benefit:nth-child(even) .benefit-text {
-    order: 2;
-  }
-
-  .plan {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    column-gap: 3rem;
-    padding: 2rem;
-  }
-
-  .plan-list {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    margin-block: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  .plan-cta {
-    width: auto;
-    justify-self: start;
-    margin-top: 1.5rem;
+    gap: 3.5rem;
   }
 }
 
 /* ---------------------------- reduced motion -------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .relay-pulse {
+  .handoff-pulse {
     animation: none;
-    opacity: 0.5;
+    opacity: 0.55;
   }
 
-  .hero-after,
-  .result {
+  .hero-caption-line {
     transition-duration: 1ms;
-    animation-duration: 1ms;
+  }
+
+  .hero-caption-line--in[data-in] {
+    transition-delay: 120ms;
   }
 }

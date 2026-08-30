@@ -1,60 +1,58 @@
 import { useState } from "react";
 
 import { SlideToLock } from "@/components/SlideToLock";
-import { createSeal, formatSealTime, type LockSeal } from "@/lib/lock-seal";
+
+/*
+ * Headlines considered, and why this one:
+ *
+ *   "Make the decision you keep putting off."  — true, but it describes the
+ *                                                reader's failure, not Lock.
+ *   "Where decisions end."                     — atmosphere without a promise.
+ *   "Decide, and be done with it."             — right idea, four words too many.
+ *   "You already know. Lock it."               — assumes what it has to earn.
+ *   "Finish the decision."                     — the promise, in three words.
+ *
+ * The problem Lock solves is not deciding. It is finishing — the decision that
+ * stays open for weeks after you already know. So: finish.
+ */
 
 /**
  * The first screen.
  *
- * The claim is one sentence and the proof is directly under it: a real
- * decision, what Lock made of it, and the actual control — live, not a
- * screenshot. A visitor can lock something before they have read anything,
- * which is the fastest way to understand what this is.
+ * A claim, a sentence, a button, and the gesture the whole product ends on —
+ * nothing else. No example decision, no card, no interface to inspect: the
+ * visitor should meet Lock's identity before they meet its mechanics.
  */
 export function Hero({ onStart }: { onStart: () => void }) {
-  const [seal, setSeal] = useState<LockSeal | null>(null);
+  const [locked, setLocked] = useState(false);
 
   return (
     <section className="hero">
-      <h1 className="hero-title">Make the decision you keep putting off.</h1>
+      <h1 className="hero-title">Finish the decision.</h1>
 
       <p className="hero-sub">
-        Say what you are stuck on. Lock finds the real decision under it — then you lock it in.
+        Lock works out what you are actually deciding, then gives you one deliberate way to close
+        it.
       </p>
 
-      <div className="hero-actions">
-        <button type="button" onClick={onStart} className="btn btn--primary">
-          Try Lock
-        </button>
-        <span className="hero-terms">Free while it is in beta. No account.</span>
+      <button type="button" onClick={onStart} className="btn btn--primary hero-cta">
+        Try Lock
+      </button>
+
+      {/* The gesture, at the size it really is. This is the whole product. */}
+      <div className="hero-gesture" data-locked={locked || undefined}>
+        <SlideToLock onConfirm={() => setLocked(true)} />
+        <p className="hero-caption" aria-live="polite">
+          <span className="hero-caption-line" data-out={locked || undefined}>
+            Every decision ends here.
+          </span>
+          <span className="hero-caption-line hero-caption-line--in" data-in={locked || undefined}>
+            That is the whole product.
+          </span>
+        </p>
       </div>
 
-      {/* The product, at the size it actually is. */}
-      <div className="card hero-card" data-locked={seal ? true : undefined}>
-        <p className="eyebrow">{seal ? "Locked" : "Your decision"}</p>
-        <p className="card-decision">Should I move to Paris?</p>
-
-        <div className="card-read">
-          <p className="eyebrow">What it comes down to</p>
-          <p className="card-read-line">
-            You are not choosing a city. You are deciding whether to stop waiting for the right
-            moment to arrive.
-          </p>
-        </div>
-
-        {seal ? (
-          <div className="card-seal">
-            <span className="type-mono card-seal-id">{seal.id}</span>
-            <span className="type-mono card-seal-time">{formatSealTime(seal.at)}</span>
-          </div>
-        ) : (
-          <SlideToLock label="slide to lock" onConfirm={() => setSeal(createSeal())} />
-        )}
-      </div>
-
-      <p className="hero-after" data-shown={seal ? true : undefined} aria-live="polite">
-        That last move is the product. Everything before it exists to get you to it.
-      </p>
+      <p className="hero-terms">Free while it is being built. No account.</p>
     </section>
   );
 }
