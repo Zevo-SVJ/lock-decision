@@ -1,17 +1,14 @@
-import { useScrollScene } from "@/hooks/use-scroll-scene";
-
 /**
  * What Lock does instead of asking questions.
  *
  * Two real product surfaces — a reflection and a tradeoff — shown as the
- * artefacts they are. Scroll moves the reading position between them rather
- * than fading cards in, so the point lands: these are moves, not messages.
+ * artefacts they are. Scroll trades emphasis between them and fills the
+ * weighing in front of the reader, driven by the browser's own view timeline
+ * rather than a JavaScript loop.
  */
 export function NotAChat() {
-  const ref = useScrollScene<HTMLDivElement>();
-
   return (
-    <div ref={ref} className="moves">
+    <div className="moves">
       <figure className="move move--reflect">
         <figcaption className="type-meta">It reflects</figcaption>
         <p className="move-statement">

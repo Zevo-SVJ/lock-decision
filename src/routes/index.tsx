@@ -1,11 +1,13 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { Artifact } from "@/components/landing/Artifact";
 import { Depth } from "@/components/landing/Depth";
 import { HeroLock } from "@/components/landing/HeroLock";
 import { NotAChat } from "@/components/landing/NotAChat";
 import { Relay } from "@/components/landing/Relay";
 import { Scene } from "@/components/landing/Scene";
+import { Shift } from "@/components/landing/Shift";
 import { LockMark } from "@/components/lock/LockMark";
 import { SlideToLock } from "@/components/SlideToLock";
 import { INVITE_PARAM } from "@/lib/lock-invite";
@@ -14,10 +16,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Lock" },
-      {
-        name: "description",
-        content: "You already know. Lock is where you say it.",
-      },
+      { name: "description", content: "You already know. Lock is where you say it." },
       { property: "og:title", content: "Lock" },
       { property: "og:description", content: "You already know. You just haven't decided." },
       { property: "og:type", content: "website" },
@@ -39,6 +38,19 @@ export const Route = createFileRoute("/")({
 function Landing() {
   const navigate = useNavigate();
   const [locked, setLocked] = useState(false);
+  const start = () => void navigate({ to: "/lock" });
+
+  /**
+   * The closing surface catches light where the pointer is. Desktop only —
+   * there is no hover on a phone, and the two custom properties are the whole
+   * cost of it.
+   */
+  const trackPointer = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--px", `${((e.clientX - rect.left) / rect.width) * 100}%`);
+    e.currentTarget.style.setProperty("--py", `${((e.clientY - rect.top) / rect.height) * 100}%`);
+  };
 
   return (
     <>
@@ -58,7 +70,7 @@ function Landing() {
           <HeroLock onLocked={() => setLocked(true)} />
 
           <p className="hero-after" data-shown={locked || undefined} aria-live="polite">
-            That is the whole product. Everything before it exists to get you here.
+            That is the whole product. Everything else exists to get you there.
           </p>
         </section>
 
@@ -78,6 +90,8 @@ function Landing() {
           <NotAChat />
         </Scene>
 
+        <Shift />
+
         <Scene
           eyebrow="How long it takes"
           title={
@@ -92,6 +106,18 @@ function Landing() {
             questionnaire that was written before it met you.
           </p>
           <Depth />
+        </Scene>
+
+        <Scene
+          eyebrow="What you keep"
+          title={
+            <>
+              A decision, sealed.
+              <span className="scene-title-dim"> With the reason it held.</span>
+            </>
+          }
+        >
+          <Artifact />
         </Scene>
 
         <Scene
@@ -110,18 +136,10 @@ function Landing() {
           <Relay />
         </Scene>
 
-        <section className="closing">
+        <section className="closing" onPointerMove={trackPointer}>
           <p className="closing-line">Something is waiting on you.</p>
-          <SlideToLock
-            label="slide to begin"
-            confirmedLabel="open"
-            onConfirm={() => void navigate({ to: "/lock" })}
-          />
-          <button
-            type="button"
-            onClick={() => void navigate({ to: "/lock" })}
-            className="closing-plain"
-          >
+          <SlideToLock label="slide to begin" confirmedLabel="open" onConfirm={start} />
+          <button type="button" onClick={start} className="closing-plain">
             Or just start
           </button>
         </section>

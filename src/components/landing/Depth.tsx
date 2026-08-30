@@ -1,5 +1,3 @@
-import { useScrollScene } from "@/hooks/use-scroll-scene";
-
 /**
  * Fast or deep.
  *
@@ -8,10 +6,8 @@ import { useScrollScene } from "@/hooks/use-scroll-scene";
  * themselves, so depth is shown as distance rather than described in a table.
  */
 export function Depth() {
-  const ref = useScrollScene<HTMLDivElement>();
-
   return (
-    <div ref={ref} className="depth">
+    <div className="depth">
       <div className="depth-column">
         <p className="depth-label type-meta">Settled</p>
         <ol className="depth-rungs">

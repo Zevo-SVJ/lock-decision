@@ -1661,18 +1661,70 @@ svg.lock-knob-glyph {
   margin-top: clamp(3rem, 9vh, 4.5rem);
 }
 
-.hero-subject {
-  margin-bottom: 2rem;
+.hero-eyebrow {
+  margin-bottom: 1rem;
+}
+
+/*
+ * The decision, unresolved.
+ *
+ * The same line three times, slightly out of register — the way a thought you
+ * have not settled actually sits. `--charge` is the control's own travel, so
+ * dragging pulls the copies into one and lifts the contrast. The gesture does
+ * not illustrate the idea; it performs it.
+ */
+.resolve {
+  /* All three copies share one grid cell, so they wrap identically and the
+     echoes can only ever be an offset of the real line — never other text. */
+  display: grid;
+  margin-bottom: 2.25rem;
   padding-left: 0.875rem;
   border-left: 1px solid var(--line);
 }
 
-.hero-statement {
-  margin-top: 0.75rem;
+.resolve-line,
+.resolve-echo {
+  grid-area: 1 / 1;
   font-size: clamp(1.25rem, 5vw, 1.5rem);
   line-height: 1.3;
   letter-spacing: -0.02em;
+  /* The base stylesheet gives <p> `text-wrap: pretty`; without matching it the
+     echoes break lines differently and read as garbled text rather than one
+     unsettled thought. */
+  text-wrap: pretty;
+}
+
+/* Legible at rest: it gains contrast rather than starting blurred. */
+.resolve-line {
+  position: relative;
+  z-index: 1;
   color: var(--fg-1);
+  opacity: calc(0.72 + var(--charge, 0) * 0.28);
+}
+
+.resolve-echo {
+  color: var(--fg-1);
+  pointer-events: none;
+  opacity: calc((1 - var(--charge, 0)) * 0.26);
+  filter: blur(calc((1 - var(--charge, 0)) * 3px));
+  transform: translate3d(calc((1 - var(--charge, 0)) * var(--drift)), 0, 0);
+}
+
+.resolve-echo--a {
+  --drift: -5px;
+}
+
+.resolve-echo--b {
+  --drift: 6px;
+}
+
+/* Once it is locked there is nothing left to resolve. */
+.hero-lock[data-locked] .resolve-echo {
+  opacity: 0;
+}
+
+.hero-lock[data-locked] .resolve-line {
+  opacity: 1;
 }
 
 .hero-sealed {
@@ -1723,18 +1775,25 @@ svg.lock-knob-glyph {
   border-top: 1px solid var(--line-faint);
 }
 
-/* Only hide-then-reveal when scripts are actually running. */
-.js .scene {
-  opacity: 0;
-  transform: translate3d(0, 14px, 0);
-  transition:
-    opacity 620ms var(--ease-system),
-    transform 620ms var(--ease-system);
-}
+/*
+ * Only hide-then-reveal where scripts are actually running. Without this the
+ * page would be blank below the fold if they never arrive; where the feature
+ * itself is unsupported the rule is skipped and the content simply shows,
+ * which is the safe direction to fail in.
+ */
+@media (scripting: enabled) {
+  .scene {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    transition:
+      opacity 620ms var(--ease-system),
+      transform 620ms var(--ease-system);
+  }
 
-.js .scene[data-shown] {
-  opacity: 1;
-  transform: none;
+  .scene[data-shown] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .scene-eyebrow {
@@ -1766,7 +1825,6 @@ svg.lock-knob-glyph {
 /* --------------------------- moves, not messages --------------------------- */
 
 .moves {
-  --s: 0.5;
   display: flex;
   flex-direction: column;
   gap: 3rem;
@@ -1780,15 +1838,7 @@ svg.lock-knob-glyph {
   transition: opacity 320ms linear;
 }
 
-.move--reflect {
-  opacity: calc(0.55 + (1 - var(--s)) * 0.45);
-  transform: translate3d(0, calc((var(--s) - 0.5) * -10px), 0);
-}
 
-.move--tradeoff {
-  opacity: calc(0.55 + var(--s) * 0.45);
-  transform: translate3d(0, calc((var(--s) - 0.5) * 10px), 0);
-}
 
 .move-statement {
   margin-top: 0.875rem;
@@ -1857,14 +1907,12 @@ svg.lock-knob-glyph {
   height: 100%;
   border-radius: 999px;
   background: oklch(1 0 0 / 50%);
-  /* Fills as the section is read, so the weighing happens in front of them. */
-  width: calc(var(--w) * clamp(0, calc((var(--s) - 0.25) / 0.4), 1) * 100%);
+  width: calc(var(--w) * 100%);
 }
 
 /* ------------------------------ fast or deep ------------------------------ */
 
 .depth {
-  --s: 0.5;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(1rem, 5vw, 2rem);
@@ -1906,11 +1954,7 @@ svg.lock-knob-glyph {
   background: oklch(1 0 0 / 6%);
 }
 
-/* The deep column extends as the section is read: depth shown as distance. */
-.depth-column--deep .depth-rung:nth-child(n + 2):not(.is-terminal) {
-  opacity: clamp(0, calc((var(--s) - 0.3) / 0.35), 1);
-  transform: translate3d(0, calc((1 - clamp(0, calc((var(--s) - 0.3) / 0.35), 1)) * 8px), 0);
-}
+
 
 .depth-note {
   margin-top: 1rem;
@@ -2021,8 +2065,198 @@ svg.lock-knob-glyph {
     transform: none;
     opacity: 1;
   }
+}
 
-  .move-scale-fill {
+/* ================================================================== *
+ * The light act
+ *
+ * The one section that leaves the dark. Everything before it is the state of
+ * not having decided; this is the other side of that. The contrast carries the
+ * argument, which is why the copy barely says anything.
+ * ================================================================== */
+
+.act {
+  margin-inline: calc(clamp(1.375rem, 6.5vw, 2rem) * -1);
+  padding-inline: clamp(1.375rem, 6.5vw, 2rem);
+}
+
+.act--light {
+  --fg-1: oklch(0.19 0.004 264);
+  --fg-2: oklch(0.42 0.004 264);
+  --fg-3: oklch(0.55 0.004 264);
+  background: linear-gradient(180deg, oklch(0.955 0.001 264), oklch(0.9 0.002 264));
+  color: var(--fg-1);
+  padding-block: clamp(5rem, 18vh, 9rem);
+}
+
+.act-inner {
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+.act-eyebrow {
+  color: var(--fg-3);
+  margin-bottom: 1.75rem;
+}
+
+.act-claim {
+  font-size: clamp(1.75rem, 7vw, 2.375rem);
+  line-height: 1.14;
+  letter-spacing: -0.032em;
+  font-weight: 500;
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+
+.act-claim-dim {
+  color: var(--fg-3);
+}
+
+.act-note {
+  margin-top: 1.75rem;
+  max-width: 38ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+/* ================================================================== *
+ * The artifact
+ * ================================================================== */
+
+.artifact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  margin-top: 3rem;
+}
+
+.artifact-card {
+  display: block;
+  width: auto;
+  height: clamp(20rem, 52vh, 27rem);
+  max-width: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid var(--line-faint);
+  box-shadow: 0 40px 80px -50px oklch(0 0 0 / 95%);
+}
+
+.artifact-note {
+  max-width: 34ch;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fg-3);
+}
+
+/* ================================================================== *
+ * Scroll-linked motion, driven by the browser
+ *
+ * These read the section's own position through a view timeline rather than a
+ * JavaScript loop, so scrolling costs nothing on the main thread. Where the
+ * timeline is unsupported the end state simply stands, which is correct on its
+ * own — nothing here is load-bearing for comprehension.
+ * ================================================================== */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .move--reflect,
+    .move--tradeoff {
+      animation: move-emphasis linear both;
+      animation-timeline: view();
+      animation-range: entry 20% exit 30%;
+    }
+
+    .move--tradeoff {
+      animation-name: move-emphasis-late;
+    }
+
+    .move-scale-fill {
+      animation: weigh linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 55%;
+    }
+
+    /* The hard decision's ladder extends as the section is read. */
+    .depth-column--deep .depth-rung:nth-child(n + 2):not(.is-terminal) {
+      animation: rung-arrive linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 45%;
+    }
+  }
+}
+
+@keyframes move-emphasis {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 0.5;
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes move-emphasis-late {
+  from {
+    opacity: 0.5;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes weigh {
+  from {
+    width: 0%;
+  }
+  to {
     width: calc(var(--w) * 100%);
+  }
+}
+
+@keyframes rung-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resolve-echo {
+    display: none;
+  }
+
+  .resolve-line {
+    opacity: 1;
+  }
+}
+
+/* The closing surface catches light where the pointer is. Desktop only. */
+@media (hover: hover) and (pointer: fine) {
+  .closing {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .closing::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      36rem 22rem at var(--px, 50%) var(--py, 40%),
+      oklch(1 0 0 / 3.5%),
+      transparent 70%
+    );
+    transition: opacity var(--t-material) linear;
   }
 }
