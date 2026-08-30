@@ -67,8 +67,12 @@ export function decodeInvite(value: string | null | undefined): Invite | null {
   }
 }
 
+/** Where an invitation lands: straight in the product, never the front door. */
+export const INVITE_PATH = "/lock";
+
 export function buildInviteUrl(origin: string, invite: Invite): string {
   const url = new URL(origin);
+  url.pathname = INVITE_PATH;
   url.search = "";
   url.hash = "";
   url.searchParams.set(INVITE_PARAM, encodeInvite(invite));

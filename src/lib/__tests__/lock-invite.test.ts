@@ -37,9 +37,11 @@ describe("invitations", () => {
     expect(decodeInvite(btoa('{"p":"   "}'))).toBeNull();
   });
 
-  test("builds a link that carries the invitation and nothing else", () => {
+  test("builds a link that lands in the product and carries nothing else", () => {
     const url = buildInviteUrl("https://lock.app/somewhere?utm=x#frag", { prompt: "Decide." });
     const parsed = new URL(url);
+    // An invitation must not drop someone on the marketing page.
+    expect(parsed.pathname).toBe("/lock");
     expect(parsed.hash).toBe("");
     expect(parsed.searchParams.get("utm")).toBeNull();
     expect(decodeInvite(parsed.searchParams.get("k"))).toEqual({ prompt: "Decide." });

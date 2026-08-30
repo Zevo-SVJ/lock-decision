@@ -107,6 +107,12 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        {/* Scroll-revealed sections start hidden and are shown by an observer.
+            Gating that on this class keeps the page readable if scripts never
+            arrive, rather than blank below the fold. */}
+        <script
+          dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}
+        />
       </head>
       <body>
         {children}
