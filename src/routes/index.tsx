@@ -2,7 +2,10 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Artifact } from "@/components/landing/Artifact";
+import { Convergence } from "@/components/landing/Convergence";
 import { Depth } from "@/components/landing/Depth";
+import { Faq } from "@/components/landing/Faq";
+import { HowItWorks } from "@/components/landing/HowItWorks";
 import { HeroLock } from "@/components/landing/HeroLock";
 import { NotAChat } from "@/components/landing/NotAChat";
 import { Relay } from "@/components/landing/Relay";
@@ -74,6 +77,20 @@ function Landing() {
           </p>
         </section>
 
+        <Convergence />
+
+        <Scene
+          eyebrow="How it works"
+          title={
+            <>
+              Six steps.
+              <span className="scene-title-dim"> Most decisions do not need all of them.</span>
+            </>
+          }
+        >
+          <HowItWorks />
+        </Scene>
+
         <Scene
           eyebrow="What it is"
           title={
@@ -136,8 +153,12 @@ function Landing() {
           <Relay />
         </Scene>
 
+        <Scene eyebrow="Before you start" title="Straight answers.">
+          <Faq />
+        </Scene>
+
         <section className="closing" onPointerMove={trackPointer}>
-          <p className="closing-line">Something is waiting on you.</p>
+          <p className="closing-line">You have been carrying it long enough.</p>
           <SlideToLock label="slide to begin" confirmedLabel="open" onConfirm={start} />
           <button type="button" onClick={start} className="closing-plain">
             Or just start
