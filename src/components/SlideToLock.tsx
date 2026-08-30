@@ -33,15 +33,14 @@ const MAGNET_FROM = 0.86;
 const MAGNET_STRENGTH = 0.22;
 
 /**
- * The lock moment: the shackle claps shut, the capsule contracts away to the
- * right until only the closed lock is left, and the lock takes one small
- * physical knock as it seats. Under a second, and readable on its own in a
- * two-second screen recording.
+ * The lock moment: the capsule contracts away to the right until only the shut
+ * lock is left, and then the lock turns over into a check. Under a second, and
+ * readable on its own in a two-second screen recording.
  *
  * The individual beats live in CSS (`seal-*`); this is only the total, after
  * which the state is allowed to turn over.
  */
-const SEAL_MS = 900;
+const SEAL_MS = 940;
 
 const SPRINGS: Record<DriveMode, { k: number; damping: number }> = {
   // Stiff enough to sit under the finger, soft enough to carry mass.

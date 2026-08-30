@@ -273,12 +273,7 @@ function LockApp() {
 
             {phase === "locked" && seal && (
               <>
-                <ShareActions
-                  seal={seal}
-                  decision={decision}
-                  synthesis={synthesis}
-                  format={format}
-                />
+                <ShareActions seal={seal} decision={decision} format={format} />
                 <button type="button" onClick={journey.reset} className="action-plain">
                   Another decision
                 </button>

@@ -26,6 +26,16 @@ export const BODY = { x: 4.6, y: 10.6, width: 14.8, height: 9.4, radius: 3.2 } a
  */
 export const SHACKLE_PATH = "M8.2 10.2V7.6a3.8 3.8 0 0 1 7.6 0v2.6";
 
+/**
+ * The check the lock becomes once a decision is sealed.
+ *
+ * Centred on the same optical middle as the body so the exchange happens in
+ * place: at glyph size the two never read as two objects swapping, only as one
+ * turning over. Drawn with `pathLength="1"` so a dash offset of 1 -> 0 strokes
+ * it on regardless of the size it is rendered at.
+ */
+export const CHECK_PATH = "M6.6 12.6 10.4 16.4 17.6 8.6";
+
 export type GlyphPose = {
   /** Degrees to rotate the shackle about the hinge. 0 = shut. */
   angle: number;

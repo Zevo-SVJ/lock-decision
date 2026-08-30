@@ -1,30 +1,30 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 
-import { Artifact } from "@/components/landing/Artifact";
-import { Convergence } from "@/components/landing/Convergence";
-import { Faq } from "@/components/landing/Faq";
-import { Final } from "@/components/landing/Final";
+import { Card } from "@/components/landing/Card";
+import { Close } from "@/components/landing/Close";
 import { Handoff } from "@/components/landing/Handoff";
 import { Hero } from "@/components/landing/Hero";
 import { Nav } from "@/components/landing/Nav";
+import { Converge } from "@/components/landing/Plainly";
 import { Section } from "@/components/landing/Section";
-import { Sequence } from "@/components/landing/Sequence";
+import { Stages } from "@/components/landing/Stages";
+import { Story } from "@/components/landing/Story";
+import { Weight } from "@/components/landing/Weight";
 import { INVITE_PARAM } from "@/lib/lock-invite";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Lock — finish the decision" },
+      { title: "Lock — decide it, lock it" },
       {
         name: "description",
-        content:
-          "Lock works out what you are actually deciding, then gives you one deliberate way to close it.",
+        content: "Lock turns the thing you keep going round into a decision you can close.",
       },
       { property: "og:title", content: "Lock" },
-      { property: "og:description", content: "Finish the decision." },
+      { property: "og:description", content: "Decide it. Lock it." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#0b0b0d" },
+      { name: "theme-color", content: "#08080a" },
     ],
   }),
   // An invitation must never land on marketing. Links built before the product
@@ -41,11 +41,10 @@ export const Route = createFileRoute("/")({
 /**
  * The landing page.
  *
- * Six things, in the order they earn each other: the gesture, the mechanism,
- * the plain claim, the fact that it always ends, the person you can hand it
- * to, and what you keep. The page alternates motion and stillness on purpose —
- * only the sequence and the two locks move, and everything between them holds
- * completely still so that they read as events.
+ * Two things move on it: the story, which plays itself, and the lock, which
+ * the visitor moves. Everything between them is completely still — that
+ * contrast is the rhythm, and it is why the two moving things register as
+ * events rather than as decoration.
  */
 function Landing() {
   const navigate = useNavigate();
@@ -61,49 +60,51 @@ function Landing() {
         <main>
           <Hero onStart={start} />
 
-          {/* Motion. The one long-form thing on the page. */}
-          <Sequence />
+          {/* Motion. The one long-form thing on the page, and it plays itself. */}
+          <Story />
 
-          {/* Stillness. The plain claim, once they have watched it happen. */}
+          {/* Stillness, from here to the last screen. */}
           <Section
             eyebrow="What it is"
-            title="A place to finish a decision."
-            lead="Not somewhere to think out loud. Lock takes the thing you have been going round, works out what it actually turns on, and hands you the one move that ends it."
-          />
+            title="You bring a decision. You leave without it."
+            lead="Not somewhere to think out loud. Lock takes what you have been going round, works out what it actually turns on, and hands you the one move that ends it."
+          >
+            <Converge />
+          </Section>
+
+          <Section eyebrow="How it goes" title="Three moves, and it is done." wide>
+            <Stages />
+          </Section>
 
           <Section
-            eyebrow="Depth"
-            title="Two minutes or twenty. It still ends."
-            lead="An easy call is not padded out to look thorough, and a hard one is not cut short. What does not change is that there is a bottom to it."
+            eyebrow="How far it goes"
+            title="It stops when you are done, not when the script is."
+            lead="A decision that is nearly made gets a short run at it. One that is genuinely open gets a longer one. The gesture at the end is the same either way."
             wide
           >
-            <Convergence />
+            <Weight />
           </Section>
 
           <Section
             eyebrow="Together"
-            title="Some decisions are not yours alone."
-            lead="Hand one over the way you would send a message. They open Lock already holding it — and what they answer stays theirs."
+            title="Some decisions are better with someone else."
+            lead="Send the decision, not the conversation. They open Lock already holding it, and what they answer stays theirs."
             wide
           >
+            <p className="pull">Lock someone else.</p>
             <Handoff />
           </Section>
 
           <Section
-            eyebrow="What you keep"
-            title="Every lock leaves one of these."
-            lead="The decision, why it held, and the moment you made it. Yours to keep, or to put somewhere people will ask about it."
+            eyebrow="Afterwards"
+            title="One image. The decision, and the moment you made it."
+            lead="Every lock leaves one. Keep it, or put it somewhere people will ask about it."
           >
-            <Artifact />
+            <Card />
           </Section>
-
-          <Section eyebrow="Before you start" title="Straight answers.">
-            <Faq />
-          </Section>
-
-          {/* Motion, once more, and then nothing. */}
-          <Final onStart={start} />
         </main>
+
+        <Close onStart={start} />
       </div>
     </>
   );

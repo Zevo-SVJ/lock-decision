@@ -7,7 +7,6 @@ import { toBlob, type ShareFormat } from "@/lib/share-card";
 type Props = {
   seal: LockSeal;
   decision: string;
-  synthesis: string;
   format: ShareFormat;
 };
 
@@ -17,7 +16,7 @@ type Status = "idle" | "saved" | "copied" | "failed";
  * Two ways out of a locked decision: take the image, or hand the decision to
  * someone else. Both are part of the product rather than growth furniture.
  */
-export function ShareActions({ seal, decision, synthesis, format }: Props) {
+export function ShareActions({ seal, decision, format }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [inviting, setInviting] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -29,7 +28,7 @@ export function ShareActions({ seal, decision, synthesis, format }: Props) {
   }, [status]);
 
   async function shareCard() {
-    const card = { seal, decision, synthesis };
+    const card = { seal, decision };
     try {
       const blob = await toBlob(card, format);
       if (!blob) throw new Error("render failed");

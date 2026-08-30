@@ -6,7 +6,6 @@ export type ShareFormat = "story" | "square";
 export type ShareCard = {
   seal: LockSeal;
   decision: string;
-  synthesis: string;
 };
 
 const SIZES: Record<ShareFormat, { w: number; h: number }> = {
@@ -35,83 +34,85 @@ export function drawShareCard(
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const pad = Math.round(w * 0.107);
+  const pad = Math.round(w * 0.094);
   const story = format === "story";
 
-  // Ground: near-black, with one soft pool of light low and a quiet vignette.
-  ctx.fillStyle = "#0b0b0d";
+  /*
+   * Ground. One near-black, lifted a little at the top and settled at the
+   * bottom — no pools of light, no vignette. Anything more competes with the
+   * only thing on the card that is meant to be read.
+   */
+  ctx.fillStyle = "#08080a";
+  ctx.fillRect(0, 0, w, h);
+  const wash = ctx.createLinearGradient(0, 0, 0, h);
+  wash.addColorStop(0, "rgba(255,255,255,0.045)");
+  wash.addColorStop(0.42, "rgba(255,255,255,0.012)");
+  wash.addColorStop(1, "rgba(0,0,0,0.28)");
+  ctx.fillStyle = wash;
   ctx.fillRect(0, 0, w, h);
 
-  const pool = ctx.createRadialGradient(w / 2, h * 0.93, 0, w / 2, h * 0.93, w * 0.95);
-  pool.addColorStop(0, "rgba(255,255,255,0.075)");
-  pool.addColorStop(0.55, "rgba(255,255,255,0.018)");
-  pool.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = pool;
-  ctx.fillRect(0, 0, w, h);
-
-  const top = ctx.createRadialGradient(w / 2, -h * 0.08, 0, w / 2, -h * 0.08, w * 0.9);
-  top.addColorStop(0, "rgba(190,205,225,0.05)");
-  top.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = top;
-  ctx.fillRect(0, 0, w, h);
-
-  // Header: state on the left, identifier on the right.
   ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "rgba(255,255,255,0.42)";
-  ctx.font = `500 ${Math.round(w * 0.026)}px ${FONT}`;
-  tracked(ctx, "LOCKED", pad, pad + w * 0.02, w * 0.012);
 
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = `400 ${Math.round(w * 0.026)}px ${MONO}`;
+  // Header: the state, and the identifier that makes this one particular.
+  const headY = story ? h * 0.115 : pad + w * 0.024;
+  const meta = Math.round(w * 0.0235);
+  ctx.fillStyle = "rgba(255,255,255,0.38)";
+  ctx.font = `500 ${meta}px ${FONT}`;
+  tracked(ctx, "LOCKED", pad, headY, w * 0.013);
+
+  ctx.font = `400 ${meta}px ${MONO}`;
+  ctx.fillStyle = "rgba(255,255,255,0.26)";
   ctx.textAlign = "right";
-  ctx.fillText(card.seal.id, w - pad, pad + w * 0.02);
+  ctx.fillText(card.seal.id, w - pad, headY);
   ctx.textAlign = "left";
 
-  // The mark, seated shut, large and quiet. On a story it sits above the
-  // decision; on a square there is no room for it to breathe, so it stays
-  // smaller and closer.
-  const markSize = story ? w * 0.34 : w * 0.2;
-  drawLockGlyph(ctx, w / 2 - markSize / 2, story ? h * 0.27 : h * 0.17, markSize);
+  /*
+   * The decision, which is the whole card. It is set as large as it can be
+   * without wrapping past five lines, and finished with the mark itself —
+   * a lock where the full stop would be. That terminal is the signature: it
+   * is what makes the image recognisable at thumbnail size.
+   */
+  const measure = w - pad * 2;
+  const size = Math.round(w * (story ? 0.084 : 0.076));
+  const lineHeight = size * 1.16;
+  ctx.font = `500 ${size}px ${FONT}`;
+  const lines = wrap(ctx, card.decision, measure, 5);
 
-  // The decision — the one thing meant to be read. Sits below the optical
-  // centre so the story's safe area never crops it.
-  const bodyTop = story ? h * 0.53 : h * 0.42;
-  const size = story ? w * 0.072 : w * 0.062;
-  ctx.fillStyle = "#f6f6f7";
-  ctx.font = `500 ${Math.round(size)}px ${FONT}`;
-  const lines = wrap(ctx, card.decision, w - pad * 2, 6);
-  const lineHeight = size * 1.22;
-  lines.forEach((line, i) => {
-    ctx.fillText(line, pad, bodyTop + i * lineHeight);
-  });
+  /*
+   * The mark always sits on its own line under the decision. Setting it inline
+   * after the last word reads better when it fits, but whether it fits depends
+   * on the decision — and a signature that sometimes hangs off the end of a
+   * sentence and sometimes drops to a line of its own is not a signature.
+   */
+  const markSize = size * 0.78;
 
-  // The synthesis, dimmer, beneath a hairline.
-  let y = bodyTop + lines.length * lineHeight + size * 0.9;
-  if (card.synthesis) {
-    ctx.fillStyle = "rgba(255,255,255,0.1)";
-    ctx.fillRect(pad, y - size * 0.5, w * 0.12, 1);
-    y += size * 0.35;
-    const sub = story ? w * 0.037 : w * 0.033;
-    ctx.fillStyle = "rgba(255,255,255,0.56)";
-    ctx.font = `400 ${Math.round(sub)}px ${FONT}`;
-    const subLines = wrap(ctx, card.synthesis, w - pad * 2, 4);
-    subLines.forEach((line, i) => ctx.fillText(line, pad, y + i * sub * 1.5));
-  }
+  /*
+   * The mark is pinned, and the decision grows upward off it. Centring the
+   * block instead moves the signature every time the decision changes length,
+   * which is exactly what a signature must not do — this way two cards from
+   * two different decisions still read as the same object.
+   */
+  const markTop = (story ? h * 0.6 : h * 0.55) - markSize / 2;
+  const lastBaseline = markTop - size * 0.5;
+  const top = lastBaseline - (lines.length - 1) * lineHeight;
 
-  // Footer: moment on the left, identity on the right. Held clear of the
-  // bottom of a story, where platform chrome sits.
-  const footY = story ? h * 0.9 : h - pad;
-  ctx.fillStyle = "rgba(255,255,255,0.1)";
-  ctx.fillRect(pad, footY - w * 0.075, w - pad * 2, 1);
+  ctx.fillStyle = "#f7f7f8";
+  lines.forEach((line, i) => ctx.fillText(line, pad, top + i * lineHeight));
+  drawLockGlyph(ctx, pad, markTop, markSize);
 
-  ctx.fillStyle = "rgba(255,255,255,0.34)";
-  ctx.font = `400 ${Math.round(w * 0.023)}px ${MONO}`;
+  // Footer: when it happened, and whose it is.
+  const footY = story ? h * 0.895 : h - pad;
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  ctx.fillRect(pad, footY - w * 0.062, measure, 1);
+
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.font = `400 ${Math.round(w * 0.021)}px ${MONO}`;
   ctx.fillText(formatSealTime(card.seal.at), pad, footY);
 
+  ctx.fillStyle = "rgba(255,255,255,0.58)";
+  ctx.font = `500 ${meta}px ${FONT}`;
   ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  ctx.font = `500 ${Math.round(w * 0.026)}px ${FONT}`;
-  tracked(ctx, "LOCK", w - pad, footY, w * 0.016, "right");
+  tracked(ctx, "LOCK", w - pad, footY, w * 0.017, "right");
   ctx.textAlign = "left";
 }
 
@@ -123,7 +124,7 @@ function drawLockGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, size
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  ctx.strokeStyle = "rgba(255,255,255,0.66)";
+  ctx.strokeStyle = "rgba(255,255,255,0.5)";
   ctx.lineWidth = pose.strokeWidth;
   ctx.lineCap = "round";
 

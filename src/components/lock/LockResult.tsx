@@ -25,8 +25,8 @@ export function LockResult({ seal, decision, synthesis, format, onToggleFormat }
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawShareCard(canvas, { seal, decision, synthesis }, format);
-  }, [decision, format, seal, synthesis]);
+    drawShareCard(canvas, { seal, decision }, format);
+  }, [decision, format, seal]);
 
   return (
     <div className="result">
