@@ -1,5 +1,5 @@
-import { BODY, SHACKLE_PATH, glyphPose } from "@/lib/lock-glyph";
-import { formatSealTime, type LockSeal } from "@/lib/lock-seal";
+import { CHECK_PATH } from "@/lib/lock-glyph";
+import type { LockSeal } from "@/lib/lock-seal";
 
 export type ShareFormat = "story" | "square";
 
@@ -34,106 +34,74 @@ export function drawShareCard(
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const pad = Math.round(w * 0.094);
+  const pad = Math.round(w * 0.1);
   const story = format === "story";
+  const measure = w - pad * 2;
 
   /*
-   * Ground. One near-black, lifted a little at the top and settled at the
-   * bottom — no pools of light, no vignette. Anything more competes with the
-   * only thing on the card that is meant to be read.
+   * Three things and nothing else: whose it is, what was decided, and that it
+   * is closed. Anything more and it stops being an object someone would post.
    */
   ctx.fillStyle = "#08080a";
   ctx.fillRect(0, 0, w, h);
   const wash = ctx.createLinearGradient(0, 0, 0, h);
-  wash.addColorStop(0, "rgba(255,255,255,0.045)");
-  wash.addColorStop(0.42, "rgba(255,255,255,0.012)");
-  wash.addColorStop(1, "rgba(0,0,0,0.28)");
+  wash.addColorStop(0, "rgba(255,255,255,0.05)");
+  wash.addColorStop(0.5, "rgba(255,255,255,0.014)");
+  wash.addColorStop(1, "rgba(0,0,0,0.3)");
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, w, h);
 
   ctx.textBaseline = "alphabetic";
+  const small = Math.round(w * 0.023);
 
-  // Header: the state, and the identifier that makes this one particular.
-  const headY = story ? h * 0.115 : pad + w * 0.024;
-  const meta = Math.round(w * 0.0235);
-  ctx.fillStyle = "rgba(255,255,255,0.38)";
-  ctx.font = `500 ${meta}px ${FONT}`;
-  tracked(ctx, "LOCKED", pad, headY, w * 0.013);
-
-  ctx.font = `400 ${meta}px ${MONO}`;
-  ctx.fillStyle = "rgba(255,255,255,0.26)";
-  ctx.textAlign = "right";
-  ctx.fillText(card.seal.id, w - pad, headY);
-  ctx.textAlign = "left";
+  // The wordmark, top left, quiet.
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.font = `500 ${small}px ${FONT}`;
+  tracked(ctx, "LOCK", pad, story ? h * 0.115 : pad + w * 0.026, w * 0.018);
 
   /*
-   * The decision, which is the whole card. It is set as large as it can be
-   * without wrapping past five lines, and finished with the mark itself —
-   * a lock where the full stop would be. That terminal is the signature: it
-   * is what makes the image recognisable at thumbnail size.
+   * The decision. It owns the card, and it is set from a fixed baseline so a
+   * long one grows upward — two cards from two different decisions have to
+   * read as the same object, which they cannot if the type moves.
    */
-  const measure = w - pad * 2;
-  const size = Math.round(w * (story ? 0.084 : 0.076));
-  const lineHeight = size * 1.16;
+  const size = Math.round(w * (story ? 0.085 : 0.078));
+  const lineHeight = size * 1.14;
   ctx.font = `500 ${size}px ${FONT}`;
   const lines = wrap(ctx, card.decision, measure, 5);
+  const lastBaseline = story ? h * 0.58 : h * 0.52;
 
-  /*
-   * The mark always sits on its own line under the decision. Setting it inline
-   * after the last word reads better when it fits, but whether it fits depends
-   * on the decision — and a signature that sometimes hangs off the end of a
-   * sentence and sometimes drops to a line of its own is not a signature.
-   */
-  const markSize = size * 0.78;
+  ctx.fillStyle = "#f8f8f9";
+  lines.forEach((line, i) =>
+    ctx.fillText(line, pad, lastBaseline - (lines.length - 1 - i) * lineHeight),
+  );
 
-  /*
-   * The mark is pinned, and the decision grows upward off it. Centring the
-   * block instead moves the signature every time the decision changes length,
-   * which is exactly what a signature must not do — this way two cards from
-   * two different decisions still read as the same object.
-   */
-  const markTop = (story ? h * 0.6 : h * 0.55) - markSize / 2;
-  const lastBaseline = markTop - size * 0.5;
-  const top = lastBaseline - (lines.length - 1) * lineHeight;
+  // Closed, and said so once — the mark is the check the gesture ends on.
+  const footY = story ? h * 0.885 : h - pad;
+  const markSize = small * 1.5;
+  drawCheck(ctx, pad, footY - markSize * 0.82, markSize);
 
-  ctx.fillStyle = "#f7f7f8";
-  lines.forEach((line, i) => ctx.fillText(line, pad, top + i * lineHeight));
-  drawLockGlyph(ctx, pad, markTop, markSize);
+  ctx.fillStyle = "rgba(255,255,255,0.62)";
+  ctx.font = `500 ${small}px ${FONT}`;
+  tracked(ctx, "LOCKED", pad + markSize * 1.5, footY, w * 0.014);
 
-  // Footer: when it happened, and whose it is.
-  const footY = story ? h * 0.895 : h - pad;
-  ctx.fillStyle = "rgba(255,255,255,0.08)";
-  ctx.fillRect(pad, footY - w * 0.062, measure, 1);
-
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = `400 ${Math.round(w * 0.021)}px ${MONO}`;
-  ctx.fillText(formatSealTime(card.seal.at), pad, footY);
-
-  ctx.fillStyle = "rgba(255,255,255,0.58)";
-  ctx.font = `500 ${meta}px ${FONT}`;
+  ctx.fillStyle = "rgba(255,255,255,0.24)";
+  ctx.font = `400 ${Math.round(w * 0.019)}px ${MONO}`;
   ctx.textAlign = "right";
-  tracked(ctx, "LOCK", w - pad, footY, w * 0.017, "right");
+  ctx.fillText(card.seal.id, w - pad, footY);
   ctx.textAlign = "left";
 }
 
-/** The lock, shut, drawn from the geometry the control itself uses. */
-function drawLockGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+/** The check the lock turns into, drawn from the same geometry the glyph uses. */
+function drawCheck(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
   const scale = size / 24;
-  const pose = glyphPose(1);
-
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
-  ctx.lineWidth = pose.strokeWidth;
+  ctx.strokeStyle = "rgba(255,255,255,0.72)";
+  ctx.lineWidth = 2.2;
   ctx.lineCap = "round";
-
-  ctx.stroke(new Path2D(SHACKLE_PATH));
-
-  const r = BODY.radius;
-  ctx.beginPath();
-  ctx.roundRect(BODY.x, BODY.y, BODY.width, BODY.height, r);
-  ctx.stroke();
+  ctx.lineJoin = "round";
+  ctx.stroke(new Path2D(CHECK_PATH));
   ctx.restore();
 }
 

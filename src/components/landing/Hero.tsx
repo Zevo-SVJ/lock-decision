@@ -5,48 +5,53 @@ import { SlideToLock } from "@/components/SlideToLock";
 /*
  * Headlines considered:
  *
- *   "Finish the decision."   — the promise, but it describes an outcome the
- *                              reader has to imagine rather than a thing to do.
- *   "Close the decision."    — quieter, and a shade too ambiguous on its own.
- *   "Make the call."         — an idiom, not a product.
- *   "Decide it. Lock it."    — two beats, the second of which is the product's
- *                              name, its verb and its interaction at once.
+ *   "Decide it. Lock it."       — rhythmic, but "decide it" asks the reader to
+ *                                 do the hard part before Lock has offered
+ *                                 anything.
+ *   "Finish the decision."      — an outcome the reader has to picture.
+ *   "Stop carrying it."         — the feeling, not the product.
+ *   "Make a decision. Lock it." — states the job and then the thing only this
+ *                                 product does, in that order.
  *
- * The control sitting directly underneath turns the headline into an
- * instruction, which is why this one wins.
+ * The control sits directly under it, so the second sentence is an instruction
+ * the visitor can follow immediately rather than a slogan.
  */
 
 /**
  * The first screen.
  *
- * A headline, a sentence, a button, and the gesture the whole product ends on.
- * Nothing else belongs here — no example decision, no card, no preview. The
- * negative space is doing work: it is what makes the one object on screen read
- * as an object.
+ * A headline, one sentence, one button, and the real control. No demo plays
+ * here: the visitor can drive the actual gesture with their thumb, which is a
+ * better demonstration than anything that could play at them, and it means the
+ * first screen is beautiful before a single thing moves.
  */
 export function Hero({ onStart }: { onStart: () => void }) {
   const [locked, setLocked] = useState(false);
 
   return (
     <section className="hero">
-      <h1 className="hero-title">
-        Decide it.
-        <span className="hero-title-line">Lock it.</span>
-      </h1>
+      <div className="wrap hero-inner">
+        <h1 className="hero-title">
+          Make a decision.
+          <span className="hero-title-turn">Lock it.</span>
+        </h1>
 
-      <p className="hero-sub">
-        Lock turns the thing you keep going round into a decision you can close.
-      </p>
+        <p className="hero-sub">
+          Bring the thing you keep going round. Lock works out what it actually turns on, then hands
+          you the one move that ends it.
+        </p>
 
-      <button type="button" onClick={onStart} className="btn btn--primary hero-cta">
-        Try Lock
-      </button>
+        <button type="button" onClick={onStart} className="btn btn--primary hero-cta">
+          Try Lock
+        </button>
 
-      <div className="hero-gesture" data-locked={locked || undefined}>
-        <SlideToLock onConfirm={() => setLocked(true)} />
+        <div className="hero-gesture" data-locked={locked || undefined}>
+          <SlideToLock onConfirm={() => setLocked(true)} />
+          <p className="hero-hint" aria-hidden="true">
+            Try it. Nothing happens until you reach the end.
+          </p>
+        </div>
       </div>
-
-      <p className="hero-foot">Free while it is being built. No account.</p>
     </section>
   );
 }

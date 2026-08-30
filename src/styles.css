@@ -1723,83 +1723,90 @@ svg.lock-knob-glyph {
 /* ================================================================== *
  * THE LANDING PAGE
  *
- * Type, space, and the product's own objects. There are no cards on this page.
- * Nothing sits inside a rounded container except the one thing that genuinely
- * is one — the image a locked decision leaves behind.
+ * Five scenes, one axis, and a lot of air. Every section is full-bleed so the
+ * ground can change tone between them; the content inside is held to one
+ * column so the page reads as a single document rather than a stack of
+ * layouts.
  *
- * The rhythm is deliberate: the story plays, everything after it holds still,
- * and the gesture returns at the end. Two moving things on the whole page.
+ * Motion here is two things and no more: the control the visitor drives, and a
+ * heading that comes up to full strength as it is reached. Everything else is
+ * composition, and the page is designed to be finished with both turned off.
  * ================================================================== */
 
 :root {
-  --gutter: clamp(1.5rem, 6.5vw, 4rem);
-  /* One measure for prose, so no two sections read at different widths. */
-  --measure: 32rem;
-  /* Used for interaction and confirmation. Never for decoration. */
-  --blue: oklch(0.7 0.095 245);
+  --gutter: clamp(1.5rem, 7vw, 5rem);
+  /* One column for the whole page, so nothing wanders off the axis. */
+  --column: 62rem;
+
+  /* Three grounds. Dark, but never the same dark twice in a row. */
+  --ground: oklch(0.125 0.004 264);
+  --ground-lift: oklch(0.185 0.006 264);
+  --ground-deep: oklch(0.072 0.004 264);
+
+  /* Used for the state a decision is in. Never for decoration. */
+  --blue: oklch(0.72 0.1 244);
 }
 
 .page {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 64rem;
-  margin-inline: auto;
-  padding-inline: var(--gutter);
   padding-bottom: max(2rem, env(safe-area-inset-bottom));
 }
 
-/* ------------------------------- type ------------------------------- */
-
-.eyebrow {
-  font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: var(--fg-4);
+.wrap {
+  width: 100%;
+  max-width: var(--column);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
 }
 
-.section-title {
-  max-width: 17ch;
-  font-size: clamp(1.875rem, 6.8vw, 2.75rem);
-  line-height: 1.08;
-  letter-spacing: -0.036em;
-  font-weight: 500;
-  color: var(--fg-1);
-  text-wrap: balance;
+/* ---------------------------- navigation ---------------------------- */
+
+.nav {
+  padding-top: env(safe-area-inset-top);
 }
 
-.eyebrow + .section-title {
-  margin-top: 1.375rem;
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 3.5rem;
 }
 
-.section-lead {
-  margin-top: 1.5rem;
-  max-width: 40ch;
-  font-size: 1rem;
-  line-height: 1.6;
-  letter-spacing: -0.008em;
-  color: var(--fg-2);
-}
-
-/* A single line given the weight of a statement. */
-.pull {
-  margin-top: 3rem;
-  font-size: clamp(1.5rem, 5.6vw, 2rem);
-  line-height: 1.1;
-  letter-spacing: -0.032em;
-  font-weight: 500;
+.nav-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--fg-1);
 }
 
-/* ------------------------------ controls ---------------------------- */
+.nav-word {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Quiet, so the hero's button is unambiguously the primary action. */
+.nav-cta {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+  transition: color var(--t-micro) linear;
+}
+
+.nav-cta:hover,
+.nav-cta:active {
+  color: var(--fg-1);
+}
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 3rem;
-  padding-inline: 1.875rem;
+  height: 3.125rem;
+  padding-inline: 2rem;
   border-radius: 999px;
   font-size: 0.9375rem;
   font-weight: 500;
@@ -1818,596 +1825,388 @@ svg.lock-knob-glyph {
   color: oklch(0.11 0.004 264);
 }
 
-/* ---------------------------- navigation ---------------------------- */
-
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  height: 3.5rem;
-  padding-top: env(safe-area-inset-top);
-}
-
-.nav-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--fg-1);
-}
-
-.nav-word {
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-}
-
-/* Quiet enough that the hero's button is unambiguously the primary one. */
-.nav-cta {
-  font-size: 0.8125rem;
-  letter-spacing: -0.004em;
-  color: var(--fg-3);
-  padding: 0.5rem 0.25rem;
-  transition: color var(--t-micro) linear;
-}
-
-.nav-cta:hover,
-.nav-cta:active {
-  color: var(--fg-1);
-}
-
 /* ================================================================== *
  * HERO
+ *
+ * One column, left-aligned, with the rest of the screen left empty. A centred
+ * hero over a left-aligned page is the generic arrangement; keeping one axis
+ * from the first line to the last is what makes it read as a document.
  * ================================================================== */
 
-.hero {
+.hero-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-height: min(80svh, 44rem);
-  padding-block: clamp(3.5rem, 13vh, 8rem) clamp(3rem, 10vh, 6rem);
-  text-align: center;
+  align-items: flex-start;
+  min-height: min(84svh, 46rem);
+  padding-block: clamp(3rem, 13vh, 8rem) clamp(3rem, 10vh, 6rem);
 }
 
 .hero-title {
-  font-size: clamp(3.25rem, 16vw, 6rem);
-  line-height: 0.94;
+  font-size: clamp(2.875rem, 13.5vw, 5.5rem);
+  line-height: 0.95;
   letter-spacing: -0.05em;
   font-weight: 500;
   color: var(--fg-1);
 }
 
-/* The second beat drops to its own line at every width, on purpose. */
-.hero-title-line {
+/* The second beat is the product's name, its verb and its interaction. */
+.hero-title-turn {
   display: block;
   color: var(--fg-3);
 }
 
 .hero-sub {
-  margin-top: 1.625rem;
-  max-width: 26ch;
-  font-size: clamp(0.9375rem, 3.9vw, 1.0625rem);
+  margin-top: 1.75rem;
+  max-width: 34ch;
+  font-size: clamp(1rem, 4.1vw, 1.125rem);
   line-height: 1.55;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.011em;
   color: var(--fg-2);
-  text-wrap: balance;
+  text-wrap: pretty;
 }
 
 .hero-cta {
   margin-top: 2.25rem;
 }
 
-/* The control, at the size it actually is. */
+/* The real control, at the size it really is. */
 .hero-gesture {
-  margin-top: clamp(3.5rem, 12vh, 5.5rem);
+  margin-top: auto;
+  padding-top: clamp(3.5rem, 12vh, 6rem);
 }
 
-.hero-foot {
-  margin-top: auto;
-  padding-top: 3rem;
+.hero-gesture .lock-control {
+  margin-inline: 0;
+}
+
+.hero-hint {
+  margin-top: 1.25rem;
   font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--fg-4);
+  transition: opacity var(--t-material) linear;
+}
+
+.hero-gesture[data-locked] .hero-hint {
+  opacity: 0;
+}
+
+/* ================================================================== *
+ * SCENES
+ * ================================================================== */
+
+.scene {
+  padding-block: clamp(5rem, 17vh, 9rem);
+}
+
+/* The ground changes under the two scenes that carry an object. */
+.scene--lifted {
+  background: var(--ground-lift);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 5%),
+    inset 0 -1px 0 oklch(0 0 0 / 30%);
+}
+
+.scene--deep {
+  background: var(--ground-deep);
+}
+
+.scene--tight {
+  padding-bottom: clamp(3rem, 10vh, 5rem);
+}
+
+/*
+ * The one reveal on the page. The line arrives muted and its second half comes
+ * up as the section is reached — with motion off it is simply a bright half on
+ * a dim one, which is the composition it was drawn as.
+ */
+.statement {
+  max-width: 16ch;
+  font-size: clamp(2rem, 8vw, 3.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  text-wrap: balance;
+}
+
+.statement-lead {
+  color: var(--fg-4);
+}
+
+.statement-rest {
+  display: block;
+  color: var(--fg-3);
+  transition: color 900ms var(--ease-system);
+}
+
+.statement[data-lit] .statement-rest {
+  color: var(--fg-1);
+}
+
+.scene-note {
+  margin-top: 1.75rem;
+  max-width: 40ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: -0.008em;
+  color: var(--fg-2);
+}
+
+.scene-note--lead {
+  font-size: clamp(1.125rem, 4.6vw, 1.375rem);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: var(--fg-1);
+}
+
+/* ================================================================== *
+ * PRODUCT OBJECTS
+ *
+ * The only enclosed surfaces on the page. Everything else sits directly on the
+ * ground, so a frame here means "this is the product" rather than "this is a
+ * card".
+ * ================================================================== */
+
+.surface {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.25rem 1.25rem 1.375rem;
+  border-radius: 1.125rem;
+  border: 1px solid oklch(1 0 0 / 9%);
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 4%), oklch(1 0 0 / 1%)) padding-box,
+    var(--ground);
+  box-shadow: 0 24px 48px -36px oklch(0 0 0 / 90%);
+}
+
+.surface-line {
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  letter-spacing: -0.018em;
+  color: var(--fg-1);
+  text-wrap: pretty;
+}
+
+/* The rule under an answer, borrowed from the product's own input. */
+.surface-rule {
+  height: 1px;
+  margin-top: 0.25rem;
+  background: linear-gradient(90deg, oklch(1 0 0 / 26%), oklch(1 0 0 / 6%));
+}
+
+.surface-reflect {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.surface .reflection-reply {
+  gap: 0.5rem;
+}
+
+.surface .reflection-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  font-size: 0.8125rem;
+}
+
+.surface--sealed {
+  border-color: oklch(0.72 0.1 244 / 22%);
+}
+
+.surface-sealed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--blue);
+}
+
+.surface-id {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  color: var(--fg-4);
+}
+
+/* A glyph asked to show the check it becomes, with no animation. */
+.lock-glyph.is-check .lock-glyph-lock {
+  display: none;
+}
+
+.lock-glyph.is-check .lock-glyph-check {
+  opacity: 1;
+  stroke-dashoffset: 0;
+}
+
+/* -------------------------- the three states ------------------------- */
+
+.objects {
+  display: grid;
+  gap: clamp(2rem, 6vh, 3rem);
+  margin-top: clamp(2.75rem, 8vh, 4rem);
+}
+
+.object {
+  max-width: 24rem;
+}
+
+/* Offset, so three states of one decision never read as three cards in a row. */
+.object--b {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.object-label {
+  margin-top: 0.875rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--fg-4);
 }
 
 /* ================================================================== *
- * THE STORY
- *
- * Fixed zones, so nothing in the sequence can land on anything else: the
- * sentence owns one band, what it turns on owns the next, the control owns the
- * last, and the caption sits outside the frame entirely.
+ * DEPTH — two decisions, written out
  * ================================================================== */
 
-.story {
-  padding-block: clamp(3rem, 10vh, 6rem) clamp(4rem, 13vh, 7rem);
-}
-
-/* Left-aligned like every section below it. Centring the frame makes the
-   story read as an embedded video rather than as part of the page. */
-.story-frame {
-  max-width: 32rem;
-}
-
-.story-stage {
-  position: relative;
-  height: 13.25rem;
-}
-
-/* The sentence. Both readings share the cell, so the clip that closes over
-   one and opens on the other is measuring the same box either way. */
-.s-line {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
+.runs {
   display: grid;
-  min-height: 4.75rem;
-  font-size: clamp(1.625rem, 6.6vw, 2.125rem);
-  line-height: 1.14;
-  letter-spacing: -0.034em;
-  font-weight: 500;
-  color: var(--fg-1);
-  text-wrap: balance;
-  will-change: transform, opacity, clip-path;
+  gap: clamp(2.75rem, 8vh, 3.5rem);
+  margin-top: clamp(2.75rem, 8vh, 4rem);
 }
 
-.s-line-text,
-.s-decision {
-  grid-area: 1 / 1;
+.run-label {
+  color: var(--fg-4);
 }
 
-.s-decision {
-  opacity: 0;
+.run-beats {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-left: 1.125rem;
+  border-left: 1px solid oklch(1 0 0 / 9%);
 }
 
-.story-signals {
-  position: absolute;
-  inset-inline: 0;
-  top: 6rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-}
-
-.s-signal {
-  opacity: 0;
+.run-beat {
+  max-width: 34ch;
   font-size: 0.9375rem;
-  letter-spacing: -0.006em;
-  color: var(--fg-2);
+  line-height: 1.45;
+  letter-spacing: -0.008em;
+  color: var(--fg-3);
 }
 
-.s-control {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  opacity: 0;
+/* The decision itself is the one line in each run set at full strength. */
+.run-beat[data-first] {
+  font-size: 1.0625rem;
+  letter-spacing: -0.016em;
+  color: var(--fg-1);
 }
 
-/*
- * The control's replica, at the real control's proportions. The capsule is a
- * sibling of the lock rather than its parent, so contracting one leaves the
- * other exactly where it is.
- */
-.story-control {
-  --track-w: min(68.2vw, 19rem);
-  --track-h: calc(var(--track-w) * 215 / 798);
-  --knob: calc(var(--track-h) - 8px);
+.run-outcome {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-top: 1.5rem;
+}
+
+.run-sealed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.75rem 0.4375rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.72 0.1 244 / 24%);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.run-note {
+  font-size: 0.8125rem;
+  color: var(--fg-4);
+}
+
+/* ================================================================== *
+ * LOCK SOMEONE ELSE — one decision, two states
+ * ================================================================== */
+
+.relay {
+  display: grid;
+  gap: clamp(2.25rem, 7vh, 3rem);
+  margin-top: clamp(2.75rem, 8vh, 4rem);
+}
+
+.relay-side {
+  max-width: 24rem;
+}
+
+.relay-side--open {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Their control, at rest and untouched — a real Lock, not a notification. */
+.relay-control {
   position: relative;
-  width: var(--track-w);
-  height: var(--track-h);
+  height: 2.875rem;
+  margin-top: 0.375rem;
 }
 
-.s-capsule {
+.relay-track {
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  transform-origin: right center;
-  background-image: linear-gradient(180deg, oklch(0 0 0 / 26%), oklch(1 0 0 / 2.5%));
-  background-color: oklch(0.185 0.004 264 / 62%);
-  border: 1px solid oklch(1 0 0 / 11%);
-  box-shadow:
-    inset 0 1px 1.5px oklch(0 0 0 / 42%),
-    inset 0 -1px 0 oklch(1 0 0 / 6%);
+  border: 1px solid oklch(1 0 0 / 10%);
+  background: oklch(0 0 0 / 22%);
+  box-shadow: inset 0 1px 1.5px oklch(0 0 0 / 40%);
 }
 
-.s-cap-label {
-  position: absolute;
-  inset-block: 0;
-  right: calc(var(--knob) + 1.25rem);
-  display: flex;
-  align-items: center;
-  opacity: 0;
-  font-size: 0.6875rem;
-  letter-spacing: 0.34em;
-  color: var(--fg-3);
-  white-space: nowrap;
-}
-
-.s-knob {
+.relay-knob {
   position: absolute;
   top: 50%;
   left: 4px;
   display: grid;
   place-items: center;
-  width: var(--knob);
-  height: var(--knob);
-  margin-top: calc(var(--knob) / -2);
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: -1.125rem;
   border-radius: 999px;
   color: oklch(0.15 0.004 264);
-  background: linear-gradient(
-    180deg,
-    oklch(1 0 0 / 97%) 0%,
-    oklch(0.93 0.002 264 / 94%) 52%,
-    oklch(0.86 0.003 264 / 92%) 100%
-  );
+  background: linear-gradient(180deg, oklch(1 0 0 / 96%), oklch(0.88 0.003 264 / 92%));
   box-shadow:
-    0 1px 1px oklch(0 0 0 / 38%),
-    0 8px 18px -9px oklch(0 0 0 / 82%),
-    inset 0 1px 0 oklch(1 0 0 / 60%);
+    0 1px 1px oklch(0 0 0 / 34%),
+    0 6px 14px -8px oklch(0 0 0 / 80%);
 }
 
-.s-glyph-check {
-  opacity: 0;
-  stroke-dasharray: 16;
-  stroke-dashoffset: 16;
-}
-
-/* The same turn as the real control's, driven by an attribute rather than by
-   the seal — one mechanism, two callers. */
-.s-glyph[data-morph="check"] {
-  animation: glyph-through 300ms var(--ease-system) both;
-}
-
-.s-glyph[data-morph="check"] .s-glyph-lock {
-  animation: glyph-lock-out 170ms cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-.s-glyph[data-morph="check"] .s-glyph-check {
-  animation: glyph-check-in 280ms cubic-bezier(0.2, 0.7, 0.2, 1) 60ms both;
-}
-
-.s-glyph-lock,
-.s-glyph-check {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.s-shackle {
-  transform-box: fill-box;
-  /* The hinge, as a fraction of the shackle's own box: it swings from the
-     base of its left leg, exactly as the real mark does. */
-  transform-origin: 0% 100%;
-}
-
-/* The words, outside the frame, one at a time. */
-.story-captions {
-  position: relative;
-  height: 3rem;
-  margin-top: 2rem;
-}
-
-.s-caption {
+.relay-hint {
   position: absolute;
-  inset-inline: 0;
-  top: 0;
-  font-size: clamp(1rem, 4.2vw, 1.125rem);
-  line-height: 1.4;
-  letter-spacing: -0.014em;
-  color: var(--fg-2);
-  opacity: 0;
-  transform: translate3d(0, 6px, 0);
-  transition:
-    opacity 260ms var(--ease-system),
-    transform 260ms var(--ease-system);
-}
-
-.s-caption[data-on="true"] {
-  opacity: 1;
-  transform: none;
-}
-
-/* Reduced motion: the end of the story, held. */
-.story[data-still] .s-line-text {
-  opacity: 0;
-}
-
-.story[data-still] .s-decision,
-.story[data-still] .s-control {
-  opacity: 1;
-}
-
-.story[data-still] .s-capsule,
-.story[data-still] .s-cap-label,
-.story[data-still] .s-glyph-lock {
-  opacity: 0;
-}
-
-.story[data-still] .s-glyph-check {
-  opacity: 1;
-  stroke-dashoffset: 0;
-}
-
-.story[data-still] .story-signals {
-  display: none;
-}
-
-.story[data-still] .story-captions {
-  height: auto;
-  display: grid;
-  gap: 0.375rem;
-}
-
-.story[data-still] .s-caption {
-  position: static;
-  opacity: 1;
-  transform: none;
-}
-
-/* ------------------------------ sections ----------------------------- */
-
-.section {
-  max-width: var(--measure);
-  padding-block: clamp(4.5rem, 15vh, 8rem);
-  border-top: 1px solid var(--line-faint);
-}
-
-.section--wide {
-  max-width: 44rem;
-}
-
-/* ================================================================== *
- * WHAT IT IS — many threads, one decision
- * ================================================================== */
-
-.converge {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-width: 26rem;
-  margin-top: 3rem;
-  overflow: visible;
-}
-
-.converge-thread {
-  fill: none;
-  stroke: oklch(1 0 0 / 22%);
-  stroke-width: 1;
-  /* The outer threads are the faintest: the eye is taken to the middle. */
-  opacity: calc(1 - abs(var(--i) - (var(--n) - 1) / 2) / ((var(--n) - 1) / 2) * 0.62);
-}
-
-.converge-out {
-  fill: none;
-  stroke: var(--fg-1);
-  stroke-width: 1.5;
-}
-
-.converge-end {
-  fill: var(--blue);
-}
-
-/* ================================================================== *
- * HOW IT GOES — three states of one object
- * ================================================================== */
-
-.stages {
-  display: grid;
-  gap: clamp(2.25rem, 6vh, 3.25rem);
-  margin-top: 3rem;
-}
-
-.stage {
-  display: grid;
-  grid-template-columns: 2.5rem 1fr;
-  gap: 1.25rem;
-  align-items: start;
-}
-
-.stage-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--fg-1);
-}
-
-.stage-tick {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1.25rem;
-  height: 1px;
-  background: var(--fg-4);
-  transform: translate(-50%, calc(-50% + var(--o) * 1px));
-}
-
-.stage-tick.is-lit {
-  width: 1.5rem;
-  height: 1.5px;
-  background: var(--fg-1);
-}
-
-.stage-name {
-  font-size: 1.125rem;
-  line-height: 1.2;
-  letter-spacing: -0.022em;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-.stage-body {
-  margin-top: 0.625rem;
-  max-width: 40ch;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--fg-2);
-}
-
-/* ================================================================== *
- * HOW FAR IT GOES — the same control, two lengths
- * ================================================================== */
-
-.weights {
-  display: grid;
-  gap: 2.25rem;
-  margin-top: 3rem;
-}
-
-.weight-capsule {
-  position: relative;
-  height: 2.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: oklch(1 0 0 / 3%);
-}
-
-.weight[data-span="short"] .weight-capsule {
-  width: min(9rem, 45%);
-}
-
-.weight[data-span="long"] .weight-capsule {
-  width: min(21rem, 100%);
-}
-
-.weight-knob {
-  position: absolute;
-  top: 50%;
-  right: 4px;
-  display: grid;
-  place-items: center;
-  width: 2.125rem;
-  height: 2.125rem;
-  margin-top: -1.0625rem;
-  border-radius: 999px;
-  color: oklch(0.15 0.004 264);
-  background: oklch(0.95 0 0);
-}
-
-.weight-label {
-  margin-top: 0.875rem;
-  font-size: 0.8125rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-}
-
-/* ================================================================== *
- * TOGETHER — the decision itself makes the trip
- * ================================================================== */
-
-.handoff {
+  inset-block: 0;
+  left: 3.5rem;
   display: flex;
   align-items: center;
-  gap: clamp(0.75rem, 3vw, 1.5rem);
-  margin-top: 3.5rem;
-  color: var(--fg-2);
-}
-
-.handoff-end {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.625rem;
-  flex: none;
-}
-
-.handoff-who {
   font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  letter-spacing: 0.3em;
   color: var(--fg-4);
 }
 
-.handoff-span {
-  position: relative;
-  flex: 1 1 auto;
-  height: 3.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.handoff-rail {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--line);
-}
-
-/* The decision, as a thing you can hand over. */
-.handoff-chip {
-  position: absolute;
-  bottom: 0.75rem;
-  left: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4375rem 0.75rem;
-  border-radius: 0.625rem;
-  border: 1px solid var(--line);
-  background: var(--background);
-  font-size: 0.75rem;
-  letter-spacing: -0.006em;
-  color: var(--fg-1);
-  white-space: nowrap;
-  box-shadow: 0 10px 22px -16px oklch(0 0 0 / 90%);
-}
-
-.handoff-chip-mark {
-  width: 0.3125rem;
-  height: 0.3125rem;
-  border-radius: 999px;
-  background: var(--blue);
-}
-
-/* It makes the trip once, when the section arrives. */
-.handoff[data-play] .handoff-chip {
-  animation: handoff-cross 1.5s cubic-bezier(0.5, 0, 0.15, 1) 0.35s both;
-}
-
-.handoff[data-play] .handoff-end--them .lock-glyph {
-  animation: handoff-open 0.5s var(--ease-system) 1.55s both;
-}
-
-@keyframes handoff-cross {
-  from {
-    left: 0;
-    transform: translateX(0);
-  }
-  to {
-    left: 100%;
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes handoff-open {
-  0% {
-    transform: scale(1);
-  }
-  45% {
-    transform: scale(1.16);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
 /* ================================================================== *
- * AFTERWARDS — the one raised surface on the page
+ * THE RESULT
  * ================================================================== */
 
-.artifact {
+.result {
   display: flex;
-  justify-content: center;
-  margin-top: 3rem;
+  margin-top: clamp(2.75rem, 8vh, 4rem);
 }
 
-.artifact-card {
+.result-image {
   display: block;
-  width: min(20rem, 100%);
+  width: min(21rem, 100%);
   height: auto;
-  border-radius: 1.125rem;
+  border-radius: 1.25rem;
   box-shadow:
     0 0 0 1px oklch(1 0 0 / 7%),
-    0 44px 80px -52px oklch(0 0 0 / 95%);
+    0 48px 88px -56px oklch(0 0 0 / 95%);
 }
 
 /* ================================================================== *
@@ -2415,37 +2214,37 @@ svg.lock-knob-glyph {
  * ================================================================== */
 
 .close {
+  border-top: 1px solid oklch(1 0 0 / 7%);
+}
+
+.close-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding-block: clamp(5rem, 19vh, 10rem) clamp(4rem, 14vh, 7rem);
-  border-top: 1px solid var(--line-faint);
-  text-align: center;
+  align-items: flex-start;
+  padding-block: clamp(5rem, 18vh, 9rem) clamp(4rem, 14vh, 7rem);
 }
 
 .close-title {
-  max-width: 12ch;
-  font-size: clamp(2.25rem, 10vw, 3.5rem);
+  max-width: 14ch;
+  font-size: clamp(2.25rem, 9.5vw, 3.75rem);
   line-height: 1;
-  letter-spacing: -0.044em;
+  letter-spacing: -0.045em;
   font-weight: 500;
   color: var(--fg-1);
   text-wrap: balance;
 }
 
-.close-sub {
-  margin-top: 1.25rem;
-  font-size: 0.9375rem;
-  color: var(--fg-3);
+.close-gesture {
+  margin-top: clamp(3rem, 11vh, 4.5rem);
 }
 
-.close-gesture {
-  margin-top: clamp(3rem, 10vh, 4.5rem);
+.close-gesture .lock-control {
+  margin-inline: 0;
 }
 
 .close-plain {
-  margin-top: 2.5rem;
-  padding: 0.5rem;
+  margin-top: 2.25rem;
+  padding: 0.5rem 0;
   font-size: 0.8125rem;
   color: var(--fg-4);
   transition: color var(--t-micro) linear;
@@ -2458,63 +2257,67 @@ svg.lock-knob-glyph {
 
 /* ------------------------------- desktop ----------------------------- */
 
-@media (min-width: 52rem) {
+@media (min-width: 54rem) {
   .hero-title {
-    font-size: clamp(4.5rem, 8vw, 6rem);
+    font-size: clamp(4.5rem, 7.5vw, 6rem);
   }
 
   .hero-sub {
-    max-width: 40ch;
+    max-width: 38ch;
   }
 
-  .story-frame {
-    max-width: 42rem;
+  /* Three states, laid out as three objects on one surface rather than as a
+     row of equal panels: unequal widths, and each one dropped a little
+     further than the last. */
+  .objects {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
+    align-items: start;
   }
 
-  .story-stage {
-    height: 15.5rem;
+  .object {
+    max-width: none;
   }
 
-  .s-line {
-    font-size: 3rem;
+  .object--a {
+    margin-top: 0;
   }
 
-  .s-signal {
-    font-size: 1.0625rem;
+  .object--b {
+    margin-top: 3rem;
+    margin-left: 0;
   }
 
-  .s-caption {
-    font-size: 1.25rem;
+  .object--c {
+    margin-top: 1.25rem;
   }
 
-  .stages {
-    gap: 3.5rem;
+  .runs {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
   }
 
-  .stage {
-    grid-template-columns: 3rem 1fr;
-  }
-
-  .weights {
-    align-items: end;
+  .relay {
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
+    align-items: start;
   }
 
-  .weight[data-span="short"] .weight-capsule {
-    width: min(9rem, 60%);
+  .relay-side--open {
+    margin-top: 3.5rem;
+    margin-left: 0;
+  }
+
+  .result {
+    justify-content: flex-start;
   }
 }
 
 /* ---------------------------- reduced motion -------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .s-caption {
+  .statement-rest {
     transition-duration: 1ms;
-  }
-
-  .handoff[data-play] .handoff-chip,
-  .handoff[data-play] .handoff-end--them .lock-glyph {
-    animation: none;
   }
 }

@@ -7,14 +7,16 @@ import { LockGlyph } from "@/components/lock/LockGlyph";
 export function Nav({ onStart }: { onStart: () => void }) {
   return (
     <header className="nav">
-      <a className="nav-mark" href="/" aria-label="Lock, home">
-        <LockGlyph progress={1} size={16} />
-        <span className="nav-word">Lock</span>
-      </a>
+      <div className="wrap nav-inner">
+        <a className="nav-mark" href="/" aria-label="Lock, home">
+          <LockGlyph progress={1} size={15} />
+          <span className="nav-word">Lock</span>
+        </a>
 
-      <button type="button" onClick={onStart} className="nav-cta">
-        Try Lock
-      </button>
+        <button type="button" onClick={onStart} className="nav-cta">
+          Try Lock
+        </button>
+      </div>
     </header>
   );
 }
