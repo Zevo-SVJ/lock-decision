@@ -1623,8 +1623,8 @@ svg.lock-knob-glyph {
 .landing {
   position: relative;
   z-index: 1;
-  /* Makes the Convergence's named timeline reachable by the scene inside it. */
-  timeline-scope: --converge;
+  /* Makes the walkthrough's named timeline reachable by the states inside it. */
+  timeline-scope: --walk;
   width: 100%;
   max-width: 34rem;
   margin-inline: auto;
@@ -1642,7 +1642,15 @@ svg.lock-knob-glyph {
 /* ------------------------------- hero ------------------------------- */
 
 .hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   padding-block: clamp(3rem, 11vh, 5.5rem) clamp(3rem, 9vh, 4.5rem);
+}
+
+.hero > .hero-lock,
+.hero > .hero-after {
+  align-self: stretch;
 }
 
 .hero-title {
@@ -1658,95 +1666,64 @@ svg.lock-knob-glyph {
   color: var(--fg-3);
 }
 
-/* The decision the visitor locks. Held, not asked for. */
-.hero-lock {
-  margin-top: clamp(3rem, 9vh, 4.5rem);
+/* The sentence that says what Lock actually does. */
+.hero-sub {
+  margin-top: 1.25rem;
+  max-width: 34ch;
+  font-size: 1rem;
+  line-height: 1.55;
+  letter-spacing: -0.008em;
+  color: var(--fg-2);
 }
 
-.hero-eyebrow {
-  margin-bottom: 1rem;
+.hero-cta {
+  margin-top: 1.75rem;
+  width: auto;
+  align-self: flex-start;
+  padding-inline: 1.75rem;
 }
 
 /*
- * The decision, unresolved.
- *
- * The same line three times, slightly out of register — the way a thought you
- * have not settled actually sits. `--charge` is the control's own travel, so
- * dragging pulls the copies into one and lifts the contrast. The gesture does
- * not illustrate the idea; it performs it.
+ * The product, held. A real decision on a real card with the real control
+ * under it, so the first screen shows the thing rather than describing it.
  */
-.resolve {
-  /* All three copies share one grid cell, so they wrap identically and the
-     echoes can only ever be an offset of the real line — never other text. */
-  display: grid;
-  margin-bottom: 2.25rem;
-  padding-left: 0.875rem;
-  border-left: 1px solid var(--line);
+.hero-lock {
+  margin-top: clamp(2.5rem, 8vh, 3.5rem);
 }
 
-.resolve-line,
-.resolve-echo {
-  grid-area: 1 / 1;
-  font-size: clamp(1.25rem, 5vw, 1.5rem);
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-  /* The base stylesheet gives <p> `text-wrap: pretty`; without matching it the
-     echoes break lines differently and read as garbled text rather than one
-     unsettled thought. */
-  text-wrap: pretty;
-}
-
-/* Legible at rest: it gains contrast rather than starting blurred. */
-.resolve-line {
-  position: relative;
-  z-index: 1;
-  color: var(--fg-1);
-  opacity: calc(0.72 + var(--charge, 0) * 0.28);
-}
-
-.resolve-echo {
-  color: var(--fg-1);
-  pointer-events: none;
-  opacity: calc((1 - var(--charge, 0)) * 0.26);
-  filter: blur(calc((1 - var(--charge, 0)) * 3px));
-  transform: translate3d(calc((1 - var(--charge, 0)) * var(--drift)), 0, 0);
-}
-
-.resolve-echo--a {
-  --drift: -5px;
-}
-
-.resolve-echo--b {
-  --drift: 6px;
-}
-
-/* Once it is locked there is nothing left to resolve. */
-.hero-lock[data-locked] .resolve-echo {
-  opacity: 0;
-}
-
-.hero-lock[data-locked] .resolve-line {
-  opacity: 1;
-}
-
-.hero-sealed {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  padding: 1.125rem 1.25rem;
-  border-radius: 1.25rem;
-  background-image: linear-gradient(180deg, oklch(1 0 0 / 5%), oklch(1 0 0 / 1.5%));
+.hero-card {
+  padding: 1.25rem 1.25rem 1.375rem;
+  border-radius: 1.375rem;
   border: 1px solid var(--line);
+  background-image: linear-gradient(180deg, oklch(1 0 0 / 4.5%), oklch(1 0 0 / 1.5%));
+  box-shadow: 0 30px 60px -45px oklch(0 0 0 / 90%);
+}
+
+.hero-card-label {
+  margin-bottom: 0.75rem;
+}
+
+.hero-card-decision {
+  margin-bottom: 1.5rem;
+  font-size: clamp(1.125rem, 4.6vw, 1.375rem);
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  color: var(--fg-1);
+}
+
+.hero-card-sealed {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   animation: state-enter var(--t-state) var(--ease-system) both;
 }
 
-.hero-sealed-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.hero-card-id {
+  margin-left: auto;
+  color: var(--fg-2);
 }
 
-.hero-sealed-time {
+.hero-card-time {
   font-size: 0.625rem;
   color: var(--fg-3);
 }
@@ -1768,6 +1745,254 @@ svg.lock-knob-glyph {
 .hero-after[data-shown] {
   opacity: 1;
   transform: none;
+}
+
+/* ============================ the walkthrough ============================ *
+ *
+ * One decision, all the way through. Four states of the same frame — what you
+ * bring, what Lock sees, what it comes down to, what you commit to — handed
+ * from one to the next by scroll.
+ *
+ * The base layout is a plain legible stack. The pinned crossfade is added only
+ * where the browser can drive it from scroll, so the fallback is the content
+ * itself rather than a blank stage.
+ * ======================================================================== */
+
+.walk {
+  padding-block: clamp(4.5rem, 15vh, 8rem);
+  border-top: 1px solid var(--line-faint);
+}
+
+.walk-eyebrow {
+  margin-bottom: 2rem;
+}
+
+.walk-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+.walk-state {
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--line-faint);
+}
+
+.walk-line {
+  margin-top: 0.875rem;
+  font-size: clamp(1.125rem, 4.6vw, 1.375rem);
+  line-height: 1.34;
+  letter-spacing: -0.018em;
+  color: var(--fg-1);
+  text-wrap: pretty;
+}
+
+.walk-replies {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.walk-reply {
+  flex: 1 1 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--fg-2);
+  border: 1px solid var(--line-faint);
+  background: oklch(1 0 0 / 3%);
+}
+
+.walk-scales {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.375rem;
+}
+
+.walk-scale {
+  --w: 0.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.walk-scale-name {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.walk-scale-bar {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: oklch(1 0 0 / 7%);
+  overflow: hidden;
+}
+
+.walk-scale-fill {
+  display: block;
+  height: 100%;
+  width: calc(var(--w) * 100%);
+  border-radius: 999px;
+  background: oklch(1 0 0 / 50%);
+}
+
+/* The control, at rest, already at the far end. */
+.walk-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  height: 2.75rem;
+  padding: 0.3125rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: oklch(1 0 0 / 6%);
+}
+
+.walk-control-knob {
+  order: 2;
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 999px;
+  background: oklch(0.97 0 0);
+  color: oklch(0.16 0.004 264);
+  box-shadow: 0 6px 16px -8px oklch(0 0 0 / 90%);
+}
+
+.walk-control-label {
+  order: 1;
+  margin-left: 1rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+/*
+ * Pinned handover.
+ *
+ * The section is tall; the stage inside it sticks. `contain` runs exactly the
+ * length of the pin, so the first state is already on screen when the stage
+ * arrives and the last one is still there when it leaves — no dead frames at
+ * either end.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .walk {
+      height: 340svh;
+      padding-block: 0;
+      view-timeline-name: --walk;
+    }
+
+    .walk-sticky {
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100svh;
+    }
+
+    /* One cell: every state occupies the same space and they trade places. */
+    .walk-frame {
+      display: grid;
+      align-content: center;
+      min-height: 15rem;
+    }
+
+    .walk-state {
+      grid-area: 1 / 1;
+      animation: linear both;
+      animation-timeline: --walk;
+      animation-range: contain 0% contain 100%;
+    }
+
+    .walk-state--1 {
+      animation-name: walk-1;
+    }
+    .walk-state--2 {
+      animation-name: walk-2;
+    }
+    .walk-state--3 {
+      animation-name: walk-3;
+    }
+    .walk-state--4 {
+      animation-name: walk-4;
+    }
+  }
+}
+
+/* Complementary: what one state loses the next one takes, so the frame is
+   never empty and never shows two states at full strength. */
+@keyframes walk-1 {
+  0%,
+  20% {
+    opacity: 1;
+    transform: none;
+  }
+  25%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes walk-2 {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  25%,
+  45% {
+    opacity: 1;
+    transform: none;
+  }
+  50%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes walk-3 {
+  0%,
+  45% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  50%,
+  70% {
+    opacity: 1;
+    transform: none;
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes walk-4 {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  75%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ------------------------------ scenes ------------------------------ */
@@ -1822,94 +2047,6 @@ svg.lock-knob-glyph {
   line-height: 1.6;
   letter-spacing: -0.008em;
   color: var(--fg-2);
-}
-
-/* --------------------------- moves, not messages --------------------------- */
-
-.moves {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-  margin-top: 3rem;
-}
-
-.move {
-  padding-left: 0.875rem;
-  border-left: 1px solid var(--line-faint);
-  /* The two surfaces trade emphasis as the section passes the reading line. */
-  transition: opacity 320ms linear;
-}
-
-
-
-.move-statement {
-  margin-top: 0.875rem;
-  font-size: 1.0625rem;
-  line-height: 1.4;
-  letter-spacing: -0.014em;
-  color: var(--fg-1);
-}
-
-.move-question {
-  margin-top: 0.875rem;
-  font-size: 1.0625rem;
-  line-height: 1.4;
-  letter-spacing: -0.014em;
-  color: var(--fg-1);
-}
-
-.move-replies {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1.125rem;
-}
-
-.move-reply {
-  flex: 1 1 0;
-  padding: 0.625rem 0.75rem;
-  border-radius: 0.75rem;
-  text-align: center;
-  font-size: 0.8125rem;
-  color: var(--fg-2);
-  border: 1px solid var(--line-faint);
-  background: oklch(1 0 0 / 3%);
-}
-
-.move-scales {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-  margin-top: 1.25rem;
-}
-
-.move-scale {
-  --w: 0.5;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4375rem;
-}
-
-.move-scale-name {
-  font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-}
-
-.move-scale-bar {
-  display: block;
-  height: 2px;
-  border-radius: 999px;
-  background: oklch(1 0 0 / 7%);
-  overflow: hidden;
-}
-
-.move-scale-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: oklch(1 0 0 / 50%);
-  width: calc(var(--w) * 100%);
 }
 
 /* ------------------------------ fast or deep ------------------------------ */
@@ -2062,7 +2199,6 @@ svg.lock-knob-glyph {
     animation: none;
   }
 
-  .moves .move,
   .depth-column--deep .depth-rung {
     transform: none;
     opacity: 1;
@@ -2163,60 +2299,12 @@ svg.lock-knob-glyph {
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .move--reflect,
-    .move--tradeoff {
-      animation: move-emphasis linear both;
-      animation-timeline: view();
-      animation-range: entry 20% exit 30%;
-    }
-
-    .move--tradeoff {
-      animation-name: move-emphasis-late;
-    }
-
-    .move-scale-fill {
-      animation: weigh linear both;
-      animation-timeline: view();
-      animation-range: entry 40% cover 55%;
-    }
-
     /* The hard decision's ladder extends as the section is read. */
     .depth-column--deep .depth-rung:nth-child(n + 2):not(.is-terminal) {
       animation: rung-arrive linear both;
       animation-timeline: view();
       animation-range: entry 25% cover 45%;
     }
-  }
-}
-
-@keyframes move-emphasis {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 6px, 0);
-  }
-  to {
-    opacity: 0.5;
-    transform: translate3d(0, -6px, 0);
-  }
-}
-
-@keyframes move-emphasis-late {
-  from {
-    opacity: 0.5;
-    transform: translate3d(0, 8px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes weigh {
-  from {
-    width: 0%;
-  }
-  to {
-    width: calc(var(--w) * 100%);
   }
 }
 
@@ -2228,16 +2316,6 @@ svg.lock-knob-glyph {
   to {
     opacity: 1;
     transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .resolve-echo {
-    display: none;
-  }
-
-  .resolve-line {
-    opacity: 1;
   }
 }
 
@@ -2261,331 +2339,6 @@ svg.lock-knob-glyph {
     );
     transition: opacity var(--t-material) linear;
   }
-}
-
-/* ================================================================== *
- * The Convergence
- *
- * The page's centrepiece. A tall section carries a named view timeline; a
- * sticky stage inside it holds the scene. Every element below reads its own
- * position from that timeline, so scroll *is* the animation — scrubbing back
- * runs it backwards, and none of it touches the main thread.
- *
- * The base rules below are the resolved end state. Where scroll timelines are
- * unsupported that is simply what you see, and it still makes the point.
- * ================================================================== */
-
-.sequence {
-  position: relative;
-  height: 320svh;
-  margin-inline: calc(clamp(1.375rem, 6.5vw, 2rem) * -1);
-  view-timeline-name: --converge;
-}
-
-.sequence-stage {
-  position: sticky;
-  top: 0;
-  display: grid;
-  place-items: center;
-  height: 100svh;
-  padding-inline: clamp(1.375rem, 6.5vw, 2rem);
-  overflow: hidden;
-}
-
-.sequence-field {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 100%;
-  max-width: 30rem;
-  aspect-ratio: 1;
-  /* Scatter positions are expressed against this box, not each chip's own. */
-  container-type: size;
-  /* A phone cannot hold the full scatter without clipping the fragments, so
-     the composition tightens rather than the frame cropping it. */
-  --spread: 0.62;
-}
-
-@media (min-width: 34rem) {
-  .sequence-field {
-    --spread: 1;
-  }
-}
-
-/* A fragment of what you are carrying. Ends nowhere: these are the ones that
-   were never going to decide it. */
-.fragment {
-  grid-area: 1 / 1;
-  padding: 0.5rem 0.8125rem;
-  border-radius: 999px;
-  font-size: clamp(0.6875rem, 3.1vw, 0.8125rem);
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--fg-2);
-  background: oklch(0.22 0.004 264 / 55%);
-  border: 1px solid var(--line-faint);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  opacity: 0;
-}
-
-/* The one that does decide it. */
-.fragment-signal {
-  grid-area: 1 / 1;
-  max-width: 22ch;
-  text-align: center;
-  font-size: clamp(1.5rem, 6.4vw, 2rem);
-  line-height: 1.2;
-  letter-spacing: -0.026em;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-.sequence-caption {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.625rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--fg-3);
-  white-space: nowrap;
-}
-
-.sequence-caption--noise {
-  top: clamp(4rem, 12svh, 7rem);
-  opacity: 0;
-}
-
-.sequence-caption--signal {
-  bottom: clamp(4rem, 12svh, 7rem);
-  opacity: 1;
-}
-
-.sequence-lock {
-  position: absolute;
-  bottom: clamp(7.5rem, 22svh, 12rem);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem 0.5rem 0.75rem;
-  border-radius: 999px;
-  color: var(--fg-1);
-  background: oklch(0.22 0.004 264 / 60%);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.sequence-lock-label {
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .fragment,
-    .fragment-signal,
-    .sequence-lock,
-    .sequence-caption--noise,
-    .sequence-caption--signal {
-      animation-timeline: --converge;
-      animation-range: contain 0% contain 100%;
-      animation-fill-mode: both;
-      animation-timing-function: linear;
-    }
-
-    /* Scattered and adrift, then pulled into line, then gone. Each fragment
-       leaves on its own beat so the field thins rather than blinking out. */
-    .fragment {
-      animation-name: fragment-life;
-      animation-delay: calc(var(--fi) * -0.0001s);
-    }
-
-    .fragment-signal {
-      animation-name: signal-arrive;
-    }
-
-    .sequence-lock {
-      animation-name: lock-arrive;
-    }
-
-    .sequence-caption--noise {
-      animation-name: caption-out;
-    }
-
-    .sequence-caption--signal {
-      animation-name: caption-in;
-    }
-  }
-}
-
-@keyframes fragment-life {
-  0% {
-    opacity: 0.6;
-    transform: translate(calc(var(--fx) * var(--spread)), calc(var(--fy) * var(--spread)))
-      rotate(var(--fr)) scale(0.96);
-    filter: blur(3px);
-  }
-  14% {
-    opacity: 0.9;
-    filter: blur(1.5px);
-  }
-  38% {
-    opacity: 0.9;
-    transform: translate(calc(var(--fx) * var(--spread)), calc(var(--fy) * var(--spread)))
-      rotate(var(--fr)) scale(1);
-    filter: blur(0.6px);
-  }
-  /* Alignment: everything squares up before anything is discarded. */
-  62% {
-    opacity: 0.85;
-    transform: translate(0, calc((var(--fi) - 3.5) * 2.6rem)) rotate(0deg) scale(1);
-    filter: blur(0);
-  }
-  /* Collapse: the column compresses toward the centre and thins out. */
-  84% {
-    opacity: 0;
-    transform: translate(0, calc((var(--fi) - 3.5) * 0.5rem)) rotate(0deg) scale(0.92);
-    filter: blur(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.9);
-  }
-}
-
-@keyframes signal-arrive {
-  0%,
-  58% {
-    opacity: 0;
-    transform: scale(0.97);
-    filter: blur(6px);
-  }
-  86% {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes lock-arrive {
-  0%,
-  88% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes caption-out {
-  0%,
-  40% {
-    opacity: 1;
-  }
-  56% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes caption-in {
-  0%,
-  80% {
-    opacity: 0;
-  }
-  96%,
-  100% {
-    opacity: 1;
-  }
-}
-
-/* Reduced motion and no-timeline browsers both land on the resolved state. */
-@media (prefers-reduced-motion: reduce) {
-  .fragment {
-    opacity: 0;
-  }
-}
-
-/* ================================================================== *
- * How it works — a rail, not six cards
- * ================================================================== */
-
-.rail {
-  position: relative;
-  list-style: none;
-  margin: 3rem 0 0;
-  padding: 0 0 0 3rem;
-}
-
-/* One continuous line through the whole mechanism. */
-.rail::before {
-  content: "";
-  position: absolute;
-  left: 0.9375rem;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 1px;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    var(--line) 8%,
-    var(--line) 92%,
-    transparent
-  );
-}
-
-.rail-step {
-  position: relative;
-  padding-bottom: 2.5rem;
-}
-
-.rail-step:last-child {
-  padding-bottom: 0;
-}
-
-.rail-index {
-  position: absolute;
-  left: -3rem;
-  top: 0.125rem;
-  width: 2rem;
-  font-size: 0.6875rem;
-  color: var(--fg-3);
-  background: var(--background);
-  padding-block: 0.25rem;
-}
-
-.rail-head {
-  font-size: 1.0625rem;
-  line-height: 1.35;
-  letter-spacing: -0.014em;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-.rail-body {
-  margin-top: 0.4375rem;
-  max-width: 36ch;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--fg-3);
-}
-
-/* The last rung is where the page has been going. */
-.rail-step:last-child .rail-index,
-.rail-step:last-child .rail-head {
-  color: var(--fg-1);
 }
 
 /* ================================================================== *

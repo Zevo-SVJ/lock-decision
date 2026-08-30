@@ -2,14 +2,12 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Artifact } from "@/components/landing/Artifact";
-import { Convergence } from "@/components/landing/Convergence";
 import { Depth } from "@/components/landing/Depth";
 import { Faq } from "@/components/landing/Faq";
-import { HowItWorks } from "@/components/landing/HowItWorks";
 import { HeroLock } from "@/components/landing/HeroLock";
-import { NotAChat } from "@/components/landing/NotAChat";
 import { Relay } from "@/components/landing/Relay";
 import { Scene } from "@/components/landing/Scene";
+import { Walkthrough } from "@/components/landing/Walkthrough";
 import { Shift } from "@/components/landing/Shift";
 import { LockMark } from "@/components/lock/LockMark";
 import { SlideToLock } from "@/components/SlideToLock";
@@ -66,46 +64,27 @@ function Landing() {
 
         <section className="hero">
           <h1 className="hero-title">
-            You already know.
-            <span className="hero-title-dim"> You just haven&rsquo;t decided.</span>
+            Make the decision.
+            <span className="hero-title-dim"> Then lock it.</span>
           </h1>
+
+          <p className="hero-sub">
+            Tell Lock what you are stuck on. It works out what the decision is really about, then
+            hands you the control to commit to it.
+          </p>
+
+          <button type="button" onClick={start} className="action action--primary hero-cta">
+            Try Lock
+          </button>
 
           <HeroLock onLocked={() => setLocked(true)} />
 
           <p className="hero-after" data-shown={locked || undefined} aria-live="polite">
-            That is the whole product. Everything else exists to get you there.
+            That is the last thing that happens. Everything before it exists to get you there.
           </p>
         </section>
 
-        <Convergence />
-
-        <Scene
-          eyebrow="How it works"
-          title={
-            <>
-              Six steps.
-              <span className="scene-title-dim"> Most decisions do not need all of them.</span>
-            </>
-          }
-        >
-          <HowItWorks />
-        </Scene>
-
-        <Scene
-          eyebrow="What it is"
-          title={
-            <>
-              A decision instrument.
-              <span className="scene-title-dim"> Not somebody to talk to.</span>
-            </>
-          }
-        >
-          <p className="scene-body">
-            Lock does not interview you. It works out what the decision is actually about, shows
-            you, and asks for a commitment.
-          </p>
-          <NotAChat />
-        </Scene>
+        <Walkthrough />
 
         <Shift />
 
@@ -153,6 +132,13 @@ function Landing() {
           <Relay />
         </Scene>
 
+        <Scene eyebrow="What it costs" title="Nothing, for now.">
+          <p className="scene-body">
+            Lock is free while it is being built. There is no account and no sign-in — you open it
+            and decide something.
+          </p>
+        </Scene>
+
         <Scene eyebrow="Before you start" title="Straight answers.">
           <Faq />
         </Scene>
@@ -161,7 +147,7 @@ function Landing() {
           <p className="closing-line">You have been carrying it long enough.</p>
           <SlideToLock label="slide to begin" confirmedLabel="open" onConfirm={start} />
           <button type="button" onClick={start} className="closing-plain">
-            Or just start
+            Try Lock
           </button>
         </section>
       </main>
