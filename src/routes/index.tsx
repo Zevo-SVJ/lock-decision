@@ -1,25 +1,29 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 
-import { Artifact } from "@/components/landing/Artifact";
+import { Benefits } from "@/components/landing/Benefits";
+import { Commit } from "@/components/landing/Commit";
 import { Depth } from "@/components/landing/Depth";
 import { Faq } from "@/components/landing/Faq";
-import { HeroLock } from "@/components/landing/HeroLock";
+import { Hero } from "@/components/landing/Hero";
+import { Narrowing } from "@/components/landing/Narrowing";
+import { Nav } from "@/components/landing/Nav";
+import { Pricing } from "@/components/landing/Pricing";
+import { Circling } from "@/components/landing/Problem";
 import { Relay } from "@/components/landing/Relay";
-import { Scene } from "@/components/landing/Scene";
-import { Walkthrough } from "@/components/landing/Walkthrough";
-import { Shift } from "@/components/landing/Shift";
-import { LockMark } from "@/components/lock/LockMark";
-import { SlideToLock } from "@/components/SlideToLock";
+import { Section } from "@/components/landing/Section";
 import { INVITE_PARAM } from "@/lib/lock-invite";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Lock" },
-      { name: "description", content: "You already know. Lock is where you say it." },
+      { title: "Lock — make the decision you keep putting off" },
+      {
+        name: "description",
+        content:
+          "Say what you are stuck on. Lock finds the real decision under it, then gives you one deliberate action to commit to it.",
+      },
       { property: "og:title", content: "Lock" },
-      { property: "og:description", content: "You already know. You just haven't decided." },
+      { property: "og:description", content: "Make the decision you keep putting off." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#0b0b0d" },
@@ -36,121 +40,80 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+/**
+ * The landing page.
+ *
+ * The order is the order of a stranger's questions: what is this, does it
+ * work, why would I need it, how does it go, what does it cost. The page gets
+ * quieter as it goes — the noisiest thing on it is the decision at the top and
+ * the emptiest is the lock at the bottom.
+ */
 function Landing() {
   const navigate = useNavigate();
-  const [locked, setLocked] = useState(false);
   const start = () => void navigate({ to: "/lock" });
-
-  /**
-   * The closing surface catches light where the pointer is. Desktop only —
-   * there is no hover on a phone, and the two custom properties are the whole
-   * cost of it.
-   */
-  const trackPointer = (e: React.PointerEvent<HTMLElement>) => {
-    if (e.pointerType !== "mouse") return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty("--px", `${((e.clientX - rect.left) / rect.width) * 100}%`);
-    e.currentTarget.style.setProperty("--py", `${((e.clientY - rect.top) / rect.height) * 100}%`);
-  };
 
   return (
     <>
       <div className="lock-ground" aria-hidden="true" />
 
-      <main className="landing">
-        <header className="landing-chrome">
-          <LockMark progress={locked ? 1 : 0} />
-        </header>
+      <div className="page">
+        <Nav onStart={start} />
 
-        <section className="hero">
-          <h1 className="hero-title">
-            Make the decision.
-            <span className="hero-title-dim"> Then lock it.</span>
-          </h1>
+        <main>
+          <Hero onStart={start} />
 
-          <p className="hero-sub">
-            Tell Lock what you are stuck on. It works out what the decision is really about, then
-            hands you the control to commit to it.
-          </p>
+          <Section
+            eyebrow="Why"
+            title="You usually have enough information. You just have not decided."
+            lead="Going round it again does not add anything. It only costs you the week."
+          >
+            <Circling />
+          </Section>
 
-          <button type="button" onClick={start} className="action action--primary hero-cta">
-            Try Lock
-          </button>
+          {/* The one animated thing on the page. It resolves to a decision — */}
+          <Section eyebrow="How it works" title="Watch one decision get smaller." flush />
+          <Narrowing />
+          {/* — and the next section locks that exact decision. */}
+          <Commit />
 
-          <HeroLock onLocked={() => setLocked(true)} />
+          <Section eyebrow="What you get" title="Three things Lock is for." wide>
+            <Benefits />
+          </Section>
 
-          <p className="hero-after" data-shown={locked || undefined} aria-live="polite">
-            That is the last thing that happens. Everything before it exists to get you there.
-          </p>
-        </section>
+          <Section
+            eyebrow="Depth"
+            title="Not every decision deserves the same amount of work."
+            lead="It is not twenty questions. Lock does not put an easy call through a long process just to look thorough."
+            wide
+          >
+            <Depth />
+          </Section>
 
-        <Walkthrough />
+          <Section
+            eyebrow="Together"
+            title="Some decisions are not yours alone."
+            lead="Send one the way you would send a message. They open Lock already holding it, and what they answer stays theirs."
+            wide
+          >
+            <Relay />
+          </Section>
 
-        <Shift />
+          <Section eyebrow="Price" title="Free, for now." wide>
+            <Pricing onStart={start} />
+          </Section>
 
-        <Scene
-          eyebrow="How long it takes"
-          title={
-            <>
-              As long as the decision deserves.
-              <span className="scene-title-dim"> No longer.</span>
-            </>
-          }
-        >
-          <p className="scene-body">
-            An easy call is one exchange. A hard one opens up. You are never walked through a
-            questionnaire that was written before it met you.
-          </p>
-          <Depth />
-        </Scene>
+          <Section eyebrow="Before you start" title="Straight answers.">
+            <Faq />
+          </Section>
 
-        <Scene
-          eyebrow="What you keep"
-          title={
-            <>
-              A decision, sealed.
-              <span className="scene-title-dim"> With the reason it held.</span>
-            </>
-          }
-        >
-          <Artifact />
-        </Scene>
-
-        <Scene
-          eyebrow="When it is not yours alone"
-          title={
-            <>
-              Hand it to someone else.
-              <span className="scene-title-dim"> Let them lock it.</span>
-            </>
-          }
-        >
-          <p className="scene-body">
-            Send a decision the way you would send a message. They open Lock already holding it, and
-            what they answer stays theirs.
-          </p>
-          <Relay />
-        </Scene>
-
-        <Scene eyebrow="What it costs" title="Nothing, for now.">
-          <p className="scene-body">
-            Lock is free while it is being built. There is no account and no sign-in — you open it
-            and decide something.
-          </p>
-        </Scene>
-
-        <Scene eyebrow="Before you start" title="Straight answers.">
-          <Faq />
-        </Scene>
-
-        <section className="closing" onPointerMove={trackPointer}>
-          <p className="closing-line">You have been carrying it long enough.</p>
-          <SlideToLock label="slide to begin" confirmedLabel="open" onConfirm={start} />
-          <button type="button" onClick={start} className="closing-plain">
-            Try Lock
-          </button>
-        </section>
-      </main>
+          <section className="final">
+            <p className="final-line">Stop circling it.</p>
+            <button type="button" onClick={start} className="btn btn--primary final-cta">
+              Try Lock
+            </button>
+          </section>
+        </main>
+      </div>
     </>
   );
 }

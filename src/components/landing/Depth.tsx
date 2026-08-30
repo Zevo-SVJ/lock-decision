@@ -1,33 +1,41 @@
 /**
  * Fast or deep.
  *
- * The same mechanism, two decisions. The shallow one resolves in a single
- * beat; the hard one opens up as you scroll. The rungs are the interactions
- * themselves, so depth is shown as distance rather than described in a table.
+ * The differentiator that stops Lock reading as a twenty-question AI
+ * interrogation: the same mechanism, two decisions, two lengths. Shown as
+ * distance rather than described in a table.
  */
+
+const QUICK = ["Name it", "Lock"];
+const DEEP = [
+  "Name it",
+  "The thing underneath it",
+  "What you would actually lose",
+  "Still true tomorrow?",
+  "Lock",
+];
+
+function Column({ label, steps, note }: { label: string; steps: string[]; note: string }) {
+  return (
+    <div className="depth-col">
+      <p className="eyebrow">{label}</p>
+      <ol className="depth-steps">
+        {steps.map((s, i) => (
+          <li key={s} className="depth-step" data-last={i === steps.length - 1 || undefined}>
+            {s}
+          </li>
+        ))}
+      </ol>
+      <p className="depth-note">{note}</p>
+    </div>
+  );
+}
+
 export function Depth() {
   return (
     <div className="depth">
-      <div className="depth-column">
-        <p className="depth-label type-meta">Settled</p>
-        <ol className="depth-rungs">
-          <li className="depth-rung">Name it</li>
-          <li className="depth-rung is-terminal">Lock</li>
-        </ol>
-        <p className="depth-note">Ten seconds.</p>
-      </div>
-
-      <div className="depth-column depth-column--deep">
-        <p className="depth-label type-meta">Unresolved</p>
-        <ol className="depth-rungs">
-          <li className="depth-rung">Name it</li>
-          <li className="depth-rung">The thing underneath it</li>
-          <li className="depth-rung">What you would actually lose</li>
-          <li className="depth-rung">Still true?</li>
-          <li className="depth-rung is-terminal">Lock</li>
-        </ol>
-        <p className="depth-note">As long as it takes.</p>
-      </div>
+      <Column label="Already settled" steps={QUICK} note="About twenty seconds." />
+      <Column label="Genuinely stuck" steps={DEEP} note="As long as it takes." />
     </div>
   );
 }
