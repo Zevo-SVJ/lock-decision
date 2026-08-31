@@ -16,6 +16,12 @@ type Props = {
   /** Fired once, after the seal choreography has played out. */
   onConfirm: () => void;
   disabled?: boolean;
+  /**
+   * Why the gesture cannot complete yet. The control still moves — a dead
+   * slider teaches nothing — but it runs out of travel part way and says what
+   * is missing, so the resistance is information rather than a wall.
+   */
+  blocked?: string | null;
   className?: string;
 };
 
@@ -28,6 +34,8 @@ const INSET = 5; // px — knob inset inside the track
 
 /** Travel fraction at which the gesture commits. Effectively "the far end". */
 const COMMIT_AT = 0.985;
+/** How far a blocked gesture is allowed to go before the track stops giving. */
+const RESIST_AT = 0.42;
 /** Where the final zone begins to draw the knob in. */
 const MAGNET_FROM = 0.86;
 const MAGNET_STRENGTH = 0.22;
@@ -72,6 +80,7 @@ export function SlideToLock({
   confirmedLabel = "locked",
   onConfirm,
   disabled = false,
+  blocked = null,
   className,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -92,11 +101,13 @@ export function SlideToLock({
   const hapticMarkRef = useRef(0);
   const sealTimerRef = useRef<number | null>(null);
   const onConfirmRef = useRef(onConfirm);
+  const blockedRef = useRef<string | null>(blocked);
 
   const [phase, setPhase] = useState<ControlPhase>("idle");
   const [travel, setTravel] = useState(0); // coarse — drives aria + caption only
 
   onConfirmRef.current = onConfirm;
+  blockedRef.current = blocked;
 
   const measure = useCallback(() => {
     const track = trackRef.current;
@@ -168,7 +179,7 @@ export function SlideToLock({
    * the gesture is released, and the rest is choreography the CSS owns.
    */
   const commit = useCallback(() => {
-    if (committedRef.current) return;
+    if (committedRef.current || blockedRef.current) return;
     committedRef.current = true;
     modeRef.current = "free";
     posRef.current = maxRef.current;
@@ -212,7 +223,11 @@ export function SlideToLock({
           : 0;
       paint(posRef.current, stretch);
 
-      if (!committedRef.current && posRef.current / maxRef.current >= COMMIT_AT) {
+      if (
+        !committedRef.current &&
+        !blockedRef.current &&
+        posRef.current / maxRef.current >= COMMIT_AT
+      ) {
         commit();
         return;
       }
@@ -296,7 +311,7 @@ export function SlideToLock({
     e.preventDefault();
     const dx = e.clientX - pointerStartRef.current;
     const raw = Math.min(1, Math.max(0, (grabOffsetRef.current + dx) / maxRef.current));
-    const pulled = applyMagnet(raw);
+    const pulled = blockedRef.current ? Math.min(RESIST_AT, raw) : applyMagnet(raw);
     targetRef.current = pulled * maxRef.current;
     markHaptics(pulled);
     run();
@@ -312,7 +327,7 @@ export function SlideToLock({
   const releaseGesture = () => {
     if (committedRef.current || modeRef.current !== "drag") return;
     setGesture(false);
-    if (targetRef.current / maxRef.current >= COMMIT_AT) {
+    if (!blockedRef.current && targetRef.current / maxRef.current >= COMMIT_AT) {
       modeRef.current = "key"; // let it seat itself; tick commits on arrival
       run();
       return;
@@ -338,7 +353,8 @@ export function SlideToLock({
     if (next === null) return;
 
     e.preventDefault();
-    const clamped = Math.min(1, Math.max(0, next));
+    const ceiling = blockedRef.current ? RESIST_AT : 1;
+    const clamped = Math.min(ceiling, Math.max(0, next));
     if (clamped >= COMMIT_AT) {
       posRef.current = maxRef.current;
       commit();
@@ -372,6 +388,7 @@ export function SlideToLock({
       className={cn("lock-control", sealing && "is-sealed", engaged && "is-engaged", className)}
       style={{ "--p": 0, "--x": "0px" } as React.CSSProperties}
       data-disabled={disabled || undefined}
+      data-blocked={blocked ? "" : undefined}
     >
       <div ref={trackRef} className="lock-track">
         <div className="lock-track-travelled" aria-hidden="true" />
@@ -417,9 +434,11 @@ export function SlideToLock({
         </div>
       </div>
 
+      {blocked && <p className="lock-blocked">{blocked}</p>}
+
       {/* The track carries the instruction; this exists for screen readers. */}
       <p className="sr-only" aria-live="polite">
-        {sealing ? "Locked" : "Hold and drag the control to the end to lock"}
+        {sealing ? "Locked" : blocked ? blocked : "Hold and drag the control to the end to lock"}
       </p>
     </div>
   );

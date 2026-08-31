@@ -5,7 +5,14 @@ export type ShareFormat = "story" | "square";
 
 export type ShareCard = {
   seal: LockSeal;
+  /** The headline when nothing was chosen; the kicker above it when one was. */
   decision: string;
+  /** The option taken. Present only when the person has allowed it. */
+  chosen?: string | null;
+  /** Their own words for why. Off by default; never on without being asked. */
+  reason?: string | null;
+  /** Whether the day it was locked appears at the foot. */
+  showDate?: boolean;
 };
 
 const SIZES: Record<ShareFormat, { w: number; h: number }> = {
@@ -63,17 +70,50 @@ export function drawShareCard(
    * The decision. It owns the card, and it is set from a fixed baseline so a
    * long one grows upward — two cards from two different decisions have to
    * read as the same object, which they cannot if the type moves.
+   *
+   * When the person has allowed the option they took onto the card, that is
+   * the headline and the question becomes a quiet line above it: "Where to
+   * move?" then "Berlin" reads as an answer, which is the point of the object.
    */
+  const chosen = card.chosen?.trim() ?? "";
+  const headline = chosen || card.decision;
+  const kicker = chosen ? card.decision.trim() : "";
+
   const size = Math.round(w * (story ? 0.085 : 0.078));
   const lineHeight = size * 1.14;
   ctx.font = `500 ${size}px ${FONT}`;
-  const lines = wrap(ctx, card.decision, measure, 5);
+  const lines = wrap(ctx, headline, measure, 5);
   const lastBaseline = story ? h * 0.58 : h * 0.52;
+  const topBaseline = lastBaseline - (lines.length - 1) * lineHeight;
 
   ctx.fillStyle = "#f8f8f9";
   lines.forEach((line, i) =>
     ctx.fillText(line, pad, lastBaseline - (lines.length - 1 - i) * lineHeight),
   );
+
+  if (kicker) {
+    const kickerSize = Math.round(w * 0.028);
+    ctx.font = `400 ${kickerSize}px ${FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.44)";
+    const kickerLines = wrap(ctx, kicker, measure, 2);
+    const kickerLead = kickerSize * 1.35;
+    const kickerFoot = topBaseline - size * 0.92;
+    kickerLines.forEach((line, i) =>
+      ctx.fillText(line, pad, kickerFoot - (kickerLines.length - 1 - i) * kickerLead),
+    );
+  }
+
+  const reason = card.reason?.trim() ?? "";
+  if (reason) {
+    const reasonSize = Math.round(w * 0.03);
+    ctx.font = `400 ${reasonSize}px ${FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.56)";
+    const reasonLines = wrap(ctx, reason, measure, 3);
+    const reasonLead = reasonSize * 1.4;
+    reasonLines.forEach((line, i) =>
+      ctx.fillText(line, pad, lastBaseline + reasonSize * 1.9 + i * reasonLead),
+    );
+  }
 
   // Closed, and said so once — the mark is the check the gesture ends on.
   const footY = story ? h * 0.885 : h - pad;
@@ -82,13 +122,43 @@ export function drawShareCard(
 
   ctx.fillStyle = "rgba(255,255,255,0.62)";
   ctx.font = `500 ${small}px ${FONT}`;
-  tracked(ctx, "LOCKED", pad + markSize * 1.5, footY, w * 0.014);
+  const footX = pad + markSize * 1.5;
+  const lockedWidth = tracked(ctx, "LOCKED", footX, footY, w * 0.014);
+
+  // The day, set plainly beside it — tracked capitals twice over would run the
+  // foot into the identifier on the right.
+  if (card.showDate) {
+    ctx.fillStyle = "rgba(255,255,255,0.34)";
+    ctx.font = `400 ${small}px ${FONT}`;
+    ctx.fillText(`· ${shortDay(card.seal.at)}`, footX + lockedWidth + small * 0.7, footY);
+  }
 
   ctx.fillStyle = "rgba(255,255,255,0.24)";
   ctx.font = `400 ${Math.round(w * 0.019)}px ${MONO}`;
   ctx.textAlign = "right";
   ctx.fillText(card.seal.id, w - pad, footY);
   ctx.textAlign = "left";
+}
+
+/** e.g. "12 MAR 2026" — the day, never the minute. */
+function shortDay(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const months = [
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC",
+  ];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 /** The check the lock turns into, drawn from the same geometry the glyph uses. */
@@ -105,7 +175,10 @@ function drawCheck(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.restore();
 }
 
-/** Letter-spaced small caps; canvas has no tracking of its own. */
+/**
+ * Letter-spaced small caps; canvas has no tracking of its own. Returns the
+ * width it drew, so anything set beside it knows where to start.
+ */
 function tracked(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -113,7 +186,7 @@ function tracked(
   y: number,
   spacing: number,
   align: "left" | "right" = "left",
-) {
+): number {
   const chars = [...text];
   const width =
     chars.reduce((sum, c) => sum + ctx.measureText(c).width, 0) + spacing * (chars.length - 1);
@@ -125,6 +198,7 @@ function tracked(
     cursor += ctx.measureText(c).width + spacing;
   }
   ctx.textAlign = previous;
+  return width;
 }
 
 function wrap(

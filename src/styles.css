@@ -2321,3 +2321,1512 @@ svg.lock-knob-glyph {
     transition-duration: 1ms;
   }
 }
+
+/* ================================================================== *
+ * THE DECISION WORKSPACE AND THE RECORD
+ *
+ * The product beyond the guided journey: one surface that holds a decision
+ * from the first line of it to the moment it closes, and the record of every
+ * decision that has already closed.
+ *
+ * Same instrument, same materials. Where the journey is a single centred
+ * column that morphs in place, this is a document that scrolls — a decision
+ * with five criteria and three trade-offs is genuinely longer than one
+ * question, and pretending otherwise would mean hiding the work.
+ *
+ * Nothing here plays on its own. The only motion is the one entrance already
+ * defined above and the control the person drives with their thumb.
+ * ================================================================== */
+
+.work {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100svh;
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  padding-bottom: max(3rem, calc(env(safe-area-inset-bottom) + 2rem));
+}
+
+.work-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 40rem;
+  margin-inline: auto;
+  padding: max(0.75rem, env(safe-area-inset-top)) var(--work-gutter) 0.75rem;
+  background:
+    linear-gradient(
+      to bottom,
+      oklch(0.13 0.003 264 / 96%) 0%,
+      oklch(0.13 0.003 264 / 92%) 62%,
+      oklch(0.13 0.003 264 / 0%) 100%
+    );
+  transition: opacity var(--t-material) var(--ease-system);
+}
+
+.work {
+  --work-gutter: clamp(1.25rem, 6vw, 2rem);
+}
+
+.work-question {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.work-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  width: 100%;
+  max-width: 40rem;
+  margin-inline: auto;
+  padding: 0.5rem var(--work-gutter) 0;
+}
+
+.work-notice {
+  margin-bottom: 0;
+}
+
+.chrome-link {
+  flex: 0 0 auto;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  color: var(--fg-3);
+  transition: color var(--t-micro) linear;
+}
+
+.chrome-link:hover,
+.chrome-link:active {
+  color: var(--fg-1);
+}
+
+.dock-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.dock-row > * {
+  flex: 1 1 0;
+}
+
+.stage-enter {
+  animation: state-enter var(--t-state) var(--ease-system) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-enter {
+    animation-duration: 1ms;
+  }
+}
+
+/* Everything defers while a hand is on the Lock control. */
+html[data-gesture="lock"] .work-body > *:not(.commit),
+html[data-gesture="lock"] .work-chrome {
+  opacity: 0.4;
+}
+
+.work-body > *,
+.work-chrome {
+  transition: opacity var(--t-material) var(--ease-system);
+}
+
+/* ------------------------------ the spine ------------------------------ */
+
+/*
+ * Where you are in the same decision. It is not a wizard: every step is
+ * reachable at any time, and the dot only says whether that part has anything
+ * in it yet.
+ */
+.spine {
+  display: flex;
+  gap: 0.25rem;
+  margin-inline: calc(var(--work-gutter) * -0.5);
+  padding-inline: calc(var(--work-gutter) * 0.5);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.spine::-webkit-scrollbar {
+  display: none;
+}
+
+.spine-step {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  flex: 0 0 auto;
+  padding: 0.4375rem 0.6875rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.005em;
+  color: var(--fg-3);
+  transition:
+    color var(--t-micro) linear,
+    background-color var(--t-state) var(--ease-system);
+}
+
+.spine-step[data-on] {
+  color: var(--fg-1);
+  background: oklch(1 0 0 / 7%);
+}
+
+.spine-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fg-4);
+  transition: background-color var(--t-state) var(--ease-system);
+}
+
+.spine-dot[data-done] {
+  background: var(--signal);
+}
+
+/* ------------------------------ the stack ------------------------------ */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/*
+ * The one line of guidance a screen is allowed. It is always about what to do
+ * next or what the person has already said — never an opinion.
+ */
+.guide {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.guide strong {
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+.onward {
+  padding-top: 0.25rem;
+}
+
+.onward .action {
+  width: auto;
+  padding-inline: 1.5rem;
+}
+
+/* ------------------------------- fields -------------------------------- */
+
+.field {
+  position: relative;
+  display: block;
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 0.375rem 0 0.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--fg-1);
+  resize: none;
+  outline: none;
+}
+
+.field-input::placeholder {
+  color: var(--fg-4);
+}
+
+.field-rule {
+  display: block;
+  height: 1px;
+  background: var(--line);
+  transform-origin: left;
+  transition:
+    background-color var(--t-state) var(--ease-system),
+    transform var(--t-state) var(--ease-system);
+}
+
+.field:focus-within .field-rule,
+.field[data-filled] .field-rule {
+  background: var(--line-strong);
+}
+
+/* A line of the decision that becomes editable when it is touched. */
+.editable {
+  display: block;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+
+.editable-empty {
+  color: var(--fg-4);
+}
+
+.editable-hint {
+  position: absolute;
+  top: 0.125rem;
+  right: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+  opacity: 0;
+  transition: opacity var(--t-micro) linear;
+}
+
+.editable:hover .editable-hint,
+.editable:focus-visible .editable-hint {
+  opacity: 1;
+}
+
+.add-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.add-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0.5rem 0;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--fg-1);
+  outline: none;
+}
+
+.add-input::placeholder {
+  color: var(--fg-4);
+}
+
+.add-go {
+  flex: 0 0 auto;
+  padding: 0.3125rem 0.6875rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--fg-2);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--t-state) var(--ease-system),
+    color var(--t-micro) linear;
+}
+
+.add-field[data-filled] .add-go {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.add-go:active {
+  color: var(--fg-1);
+}
+
+.add-field .field-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* ------------------------------- options ------------------------------- */
+
+.options,
+.extras,
+.why,
+.crux {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6875rem 0;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  letter-spacing: -0.011em;
+  color: var(--fg-1);
+}
+
+.option-drop,
+.balance-drop {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 1.0625rem;
+  line-height: 1;
+  color: var(--fg-4);
+  transition: color var(--t-micro) linear;
+}
+
+.option-drop:hover,
+.option-drop:active,
+.balance-drop:hover,
+.balance-drop:active {
+  color: var(--fg-1);
+}
+
+.extra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.deadline {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.deadline-input {
+  border: 1px solid var(--line);
+  border-radius: 0.625rem;
+  background: oklch(1 0 0 / 3%);
+  padding: 0.4375rem 0.625rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--fg-1);
+  color-scheme: dark;
+}
+
+.deadline-read {
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+}
+
+.deadline .action-plain {
+  width: auto;
+  padding: 0;
+}
+
+/* ------------------------------ the standing ---------------------------- */
+
+/*
+ * What the person's own ratings add up to. It is deliberately not a verdict:
+ * the sentence under it always begins with where the number came from.
+ */
+.standing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.125rem 1.125rem 1rem;
+  border-radius: 1.125rem;
+  border: 1px solid var(--line);
+  background: oklch(1 0 0 / 3.5%);
+}
+
+.standing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6875rem;
+}
+
+.standing-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+}
+
+.standing-name {
+  font-size: 0.9375rem;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.standing-row[data-lead] .standing-name {
+  color: var(--fg-1);
+}
+
+.standing-index {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+}
+
+.standing-row[data-lead] .standing-index {
+  color: var(--fg-1);
+}
+
+.standing-bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 3px;
+  border-radius: 999px;
+  background: oklch(1 0 0 / 8%);
+  overflow: hidden;
+}
+
+.standing-fill {
+  display: block;
+  height: 100%;
+  width: calc(var(--i, 0) * 100%);
+  border-radius: inherit;
+  background: var(--fg-4);
+}
+
+.standing-row[data-lead] .standing-fill {
+  background: var(--signal);
+}
+
+.standing-read {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--fg-1);
+  text-wrap: pretty;
+}
+
+.standing-basis {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+/* ------------------------------- criteria ------------------------------- */
+
+.criteria {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/*
+ * One criterion at a time. This is what keeps Compare from being a
+ * spreadsheet: the person is answering "how good is this option on cost",
+ * which is a question a human can hold, rather than filling a grid.
+ */
+.criterion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem 1rem 0.875rem;
+  border-radius: 1.125rem;
+  border: 1px solid var(--line-faint);
+  background: oklch(1 0 0 / 2.5%);
+}
+
+.criterion[data-weight="3"] {
+  border-color: var(--line-strong);
+  background: oklch(1 0 0 / 4.5%);
+}
+
+.criterion-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.criterion-name {
+  font-size: 1.0625rem;
+  letter-spacing: -0.011em;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+
+.criterion-drop {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--fg-4);
+  transition: color var(--t-micro) linear;
+}
+
+.criterion-drop:hover,
+.criterion-drop:active {
+  color: var(--fg-2);
+}
+
+.weights {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.weight {
+  flex: 1 1 0;
+  padding: 0.4375rem 0.25rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--line-faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.005em;
+  color: var(--fg-4);
+  transition:
+    color var(--t-state) var(--ease-system),
+    border-color var(--t-state) var(--ease-system),
+    background-color var(--t-state) var(--ease-system);
+}
+
+.weight[data-on] {
+  color: var(--fg-2);
+  border-color: var(--line);
+  background: oklch(1 0 0 / 4%);
+}
+
+.weight[data-exact] {
+  color: var(--fg-1);
+  border-color: var(--line-strong);
+  background: oklch(1 0 0 / 8%);
+}
+
+.rates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.3125rem;
+  padding: 0.4375rem 0;
+}
+
+.rate-name {
+  font-size: 0.875rem;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.rate[data-lead] .rate-name {
+  color: var(--fg-1);
+}
+
+.rate[data-trail] .rate-name {
+  color: var(--fg-3);
+}
+
+.rail {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rail-step {
+  flex: 1 1 0;
+  height: 1.75rem;
+  min-width: 0;
+  border-radius: 0.375rem;
+  background: oklch(1 0 0 / 5%);
+  transition:
+    background-color var(--t-state) var(--ease-system),
+    box-shadow var(--t-state) var(--ease-system);
+}
+
+.rail-step[data-on] {
+  background: oklch(1 0 0 / 26%);
+}
+
+/* The leader is the brightest thing in its row. The signal tone stays rare —
+   it belongs to the standing above, and to the mechanism itself. */
+.rate[data-lead] .rail-step[data-on] {
+  background: oklch(1 0 0 / 62%);
+}
+
+.rail-step:active {
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 22%);
+}
+
+.rail-value {
+  flex: 0 0 1.125rem;
+  text-align: right;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-4);
+}
+
+.criterion-read {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--fg-3);
+}
+
+.suggests {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.suggest-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4375rem;
+}
+
+.chip {
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.8125rem;
+  color: var(--fg-2);
+  transition:
+    color var(--t-micro) linear,
+    border-color var(--t-micro) linear;
+}
+
+.chip:hover,
+.chip:active {
+  color: var(--fg-1);
+  border-color: var(--line-strong);
+}
+
+/* ------------------------------ trade-offs ------------------------------ */
+
+.switcher {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-faint);
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+  transition:
+    color var(--t-state) var(--ease-system),
+    border-color var(--t-state) var(--ease-system),
+    background-color var(--t-state) var(--ease-system);
+}
+
+.switch[data-on] {
+  color: var(--fg-1);
+  border-color: var(--line-strong);
+  background: oklch(1 0 0 / 6%);
+}
+
+.switch-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--signal);
+}
+
+/*
+ * The balance. One object, not two lists: a single line with what the option
+ * gives you resting above it and what it takes below. The two halves are
+ * different materials — what you gain is lit, what you give up is recessed —
+ * so which is which is legible before a word is read.
+ */
+.balance {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.125rem;
+  border: 1px solid var(--line-faint);
+  overflow: hidden;
+}
+
+.balance-half {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem;
+  min-height: 5.5rem;
+  justify-content: flex-end;
+}
+
+.balance-half--gain {
+  background: linear-gradient(to top, oklch(1 0 0 / 6%), oklch(1 0 0 / 1.5%));
+}
+
+.balance-half--give {
+  justify-content: flex-start;
+  background: linear-gradient(to bottom, oklch(0 0 0 / 22%), oklch(0 0 0 / 6%));
+}
+
+.balance-label {
+  order: -1;
+}
+
+.balance-half--give .balance-label {
+  order: 1;
+}
+
+.balance-spine {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(1 0 0 / 26%) 12%,
+    oklch(1 0 0 / 26%) 88%,
+    transparent
+  );
+}
+
+.balance-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+.balance-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.balance-half--gain .balance-item {
+  color: var(--fg-1);
+}
+
+.balance-half--give .balance-item {
+  color: var(--fg-2);
+}
+
+.balance-item > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.balance-empty {
+  font-size: 0.8125rem;
+  color: var(--fg-4);
+}
+
+.balance-adds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/*
+ * The four questions people skip. Each one stays a prompt until it is
+ * answered and then reads as a statement, so an unanswered trade-off screen is
+ * an invitation rather than a wall of empty inputs.
+ */
+.edges {
+  display: flex;
+  flex-direction: column;
+}
+
+.edge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.edge[data-open] {
+  gap: 0.5rem;
+}
+
+.edge-answer {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+
+.edge-statement {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  letter-spacing: -0.014em;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+
+.edge-invite {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+.edge-hint {
+  font-size: 0.8125rem;
+  color: var(--fg-4);
+}
+
+.edge-done {
+  width: auto;
+  align-self: flex-start;
+  padding: 0.25rem 0;
+}
+
+.crux {
+  padding-top: 0.25rem;
+}
+
+.crux .edge {
+  border-bottom: 0;
+  padding-top: 0.375rem;
+}
+
+/* -------------------------------- choose -------------------------------- */
+
+.picks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pick {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.125rem 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.9375rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--line-faint);
+  background: oklch(1 0 0 / 2.5%);
+  transition:
+    border-color var(--t-state) var(--ease-system),
+    background-color var(--t-state) var(--ease-system);
+}
+
+.pick[data-on] {
+  border-color: var(--line-strong);
+  background: oklch(1 0 0 / 7%);
+}
+
+.pick-label {
+  font-size: 1.0625rem;
+  letter-spacing: -0.011em;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.pick[data-on] .pick-label {
+  color: var(--fg-1);
+}
+
+.pick-meta {
+  grid-column: 1;
+  font-size: 0.75rem;
+  color: var(--fg-4);
+}
+
+.pick-meta:empty {
+  display: none;
+}
+
+.pick-mark {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  transition:
+    border-color var(--t-state) var(--ease-system),
+    background-color var(--t-state) var(--ease-system),
+    box-shadow var(--t-state) var(--ease-system);
+}
+
+.pick[data-on] .pick-mark {
+  border-color: var(--signal);
+  background: var(--signal);
+  box-shadow: inset 0 0 0 3px oklch(0.13 0.003 264);
+}
+
+.commit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding-top: 0.75rem;
+}
+
+.commit-note {
+  max-width: 22rem;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+/* The control says what is missing rather than simply refusing to move. */
+.lock-blocked {
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+  text-align: center;
+}
+
+.lock-control[data-blocked] .lock-track {
+  border-color: oklch(1 0 0 / 9%);
+}
+
+/* --------------------------- the locked detail --------------------------- */
+
+.detail {
+  gap: 1.75rem;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detail-sealed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-seal {
+  font-size: 0.75rem;
+  color: var(--fg-4);
+}
+
+.detail-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.detail-kicker {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--fg-3);
+}
+
+.detail-choice {
+  overflow-wrap: anywhere;
+}
+
+.detail-when {
+  font-size: 0.75rem;
+  color: var(--fg-4);
+}
+
+.detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line-faint);
+}
+
+.detail-alts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.detail-alts li {
+  padding: 0.3125rem 0.6875rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-faint);
+  font-size: 0.875rem;
+  color: var(--fg-3);
+}
+
+.detail-prose {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--fg-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.detail-context {
+  font-size: 0.9375rem;
+  color: var(--fg-3);
+}
+
+.detail-crux {
+  font-size: 1.125rem;
+  line-height: 1.42;
+  letter-spacing: -0.014em;
+  color: var(--fg-1);
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--line-strong);
+  overflow-wrap: anywhere;
+}
+
+.detail-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* The same two masses as the balance, at rest: one lit, one recessed. */
+.detail-ledger-half {
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--line-strong);
+}
+
+.detail-ledger-half--give {
+  border-left-color: var(--line-faint);
+}
+
+.detail-ledger-half ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.3125rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--fg-1);
+}
+
+.detail-ledger-half--give ul {
+  color: var(--fg-3);
+}
+
+.detail-edges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.375rem;
+}
+
+.detail-edge dd {
+  margin-top: 0.1875rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.detail-criteria {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-criteria li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line-faint);
+  font-size: 0.9375rem;
+  color: var(--fg-3);
+}
+
+.detail-criteria li[data-weight="3"] {
+  color: var(--fg-1);
+}
+
+.detail-weight {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--fg-4);
+}
+
+.detail-basis {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+.detail-foot {
+  padding-top: 0.5rem;
+}
+
+/* -------------------------------- review -------------------------------- */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.25rem;
+  border-radius: 1.125rem;
+  border: 1px solid var(--line-faint);
+  background: oklch(1 0 0 / 2.5%);
+}
+
+.review[data-due] {
+  border-color: var(--line-strong);
+  background: oklch(1 0 0 / 5%);
+}
+
+.review-ask {
+  font-size: 1.125rem;
+  letter-spacing: -0.014em;
+  color: var(--fg-1);
+}
+
+.verdicts {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.verdict {
+  flex: 1 1 0;
+  padding: 0.6875rem 0.375rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line-faint);
+  font-size: 0.875rem;
+  color: var(--fg-3);
+  transition:
+    color var(--t-state) var(--ease-system),
+    border-color var(--t-state) var(--ease-system),
+    background-color var(--t-state) var(--ease-system);
+}
+
+.verdict[data-on] {
+  color: var(--fg-1);
+  border-color: var(--line-strong);
+  background: oklch(1 0 0 / 8%);
+}
+
+.verdict[data-on][data-kind="yes"] {
+  border-color: oklch(0.88 0.032 232 / 55%);
+}
+
+.review-said {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.review-when {
+  color: var(--fg-4);
+}
+
+.review-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+.review-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.review-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.review-private {
+  font-size: 0.75rem;
+  color: var(--fg-4);
+}
+
+/* ------------------------------- artifact -------------------------------- */
+
+.artifact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line-faint);
+}
+
+.artifact .result-preview-button {
+  align-self: center;
+}
+
+.toggles {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6875rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.toggle:disabled {
+  opacity: 0.45;
+}
+
+.toggle-box {
+  flex: 0 0 auto;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  border-radius: 0.3125rem;
+  border: 1px solid var(--line);
+  transition:
+    border-color var(--t-state) var(--ease-system),
+    background-color var(--t-state) var(--ease-system),
+    box-shadow var(--t-state) var(--ease-system);
+}
+
+.toggle[aria-checked="true"] .toggle-box {
+  border-color: var(--signal);
+  background: var(--signal);
+  box-shadow: inset 0 0 0 3px oklch(0.13 0.003 264);
+}
+
+.toggle-label {
+  flex: 1 1 auto;
+  font-size: 0.9375rem;
+  color: var(--fg-2);
+}
+
+.toggle[aria-checked="true"] .toggle-label {
+  color: var(--fg-1);
+}
+
+.toggle-note {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--fg-4);
+}
+
+.artifact-private {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+/* ------------------------------ the record ------------------------------- */
+
+.record-title {
+  margin-bottom: 0.25rem;
+}
+
+.record-new {
+  align-self: flex-start;
+  width: auto;
+  padding-inline: 1.375rem;
+}
+
+.record-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.record-empty .action {
+  width: auto;
+  padding-inline: 1.25rem;
+}
+
+.record-foot {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line-faint);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--fg-4);
+}
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ask-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ask-actions .action--primary {
+  width: auto;
+  padding-inline: 1.375rem;
+}
+
+.ask-actions .action-plain {
+  width: auto;
+}
+
+.shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shelf-note {
+  font-size: 0.75rem;
+  color: var(--fg-4);
+  margin-top: -0.25rem;
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * An entry is a line in a personal record, not a row in a table. The mark on
+ * the left is the same lock the product is built around: open while the
+ * decision is, a check once it has closed.
+ */
+.entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9375rem 0;
+  border-bottom: 1px solid var(--line-faint);
+  transition: opacity var(--t-micro) linear;
+}
+
+.entry:active {
+  opacity: 0.6;
+}
+
+.entry-mark {
+  flex: 0 0 auto;
+  display: inline-flex;
+  padding-top: 0.1875rem;
+  color: var(--fg-3);
+}
+
+.entry[data-shelf="review"] .entry-mark {
+  color: var(--signal);
+}
+
+.entry[data-shelf="archived"] {
+  opacity: 0.55;
+}
+
+.entry-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.entry-question {
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  letter-spacing: -0.011em;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+
+.entry-meta {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--fg-4);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Looking back across decisions. Lock will not read psychology into three
+ * reviews, so until there are enough this block says what it has and nothing
+ * more.
+ */
+.pattern {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.125rem;
+  border-radius: 1.125rem;
+  border: 1px solid var(--line-faint);
+  background: oklch(1 0 0 / 2.5%);
+}
+
+.pattern-read {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+/* --------------------------- wider than a phone -------------------------- */
+
+@media (min-width: 34rem) {
+  .balance-half {
+    min-height: 6.5rem;
+  }
+
+  .balance-adds {
+    flex-direction: row;
+    gap: 1.25rem;
+  }
+
+  .balance-adds > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .rate {
+    grid-template-columns: minmax(6.5rem, 9rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  .detail-ledger {
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  .detail-ledger-half {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .work-body {
+    gap: 2rem;
+  }
+}
+
+/* ------------------------------ navigation ------------------------------- */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-link {
+  font-size: 0.8125rem;
+  color: var(--fg-3);
+  transition: color var(--t-micro) linear;
+}
+
+.nav-link:hover,
+.nav-link:active {
+  color: var(--fg-1);
+}

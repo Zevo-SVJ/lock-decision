@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LockRouteImport } from './routes/lock'
+import { Route as DecisionsIndexRouteImport } from './routes/decisions.index'
+import { Route as DecisionsIdRouteImport } from './routes/decisions.$id'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +25,16 @@ const LockRoute = LockRouteImport.update({
   path: '/lock',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DecisionsIndexRoute = DecisionsIndexRouteImport.update({
+  id: '/decisions/',
+  path: '/decisions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionsIdRoute = DecisionsIdRouteImport.update({
+  id: '/decisions/$id',
+  path: '/decisions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
@@ -32,30 +44,45 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lock': typeof LockRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/decisions/': typeof DecisionsIndexRoute
   '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lock': typeof LockRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/decisions': typeof DecisionsIndexRoute
   '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/lock': typeof LockRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/decisions/': typeof DecisionsIndexRoute
   '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lock' | '/api/public/health'
+  fullPaths:
+    '/' | '/lock' | '/decisions/$id' | '/decisions/' | '/api/public/health'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lock' | '/api/public/health'
-  id: '__root__' | '/' | '/lock' | '/api/public/health'
+  to: '/' | '/lock' | '/decisions/$id' | '/decisions' | '/api/public/health'
+  id:
+    | '__root__'
+    | '/'
+    | '/lock'
+    | '/decisions/$id'
+    | '/decisions/'
+    | '/api/public/health'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LockRoute: typeof LockRoute
+  DecisionsIdRoute: typeof DecisionsIdRoute
+  DecisionsIndexRoute: typeof DecisionsIndexRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
@@ -75,6 +102,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LockRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/decisions/': {
+      id: '/decisions/'
+      path: '/decisions'
+      fullPath: '/decisions/'
+      preLoaderRoute: typeof DecisionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decisions/$id': {
+      id: '/decisions/$id'
+      path: '/decisions/$id'
+      fullPath: '/decisions/$id'
+      preLoaderRoute: typeof DecisionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/health': {
       id: '/api/public/health'
       path: '/api/public/health'
@@ -88,6 +129,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LockRoute: LockRoute,
+  DecisionsIdRoute: DecisionsIdRoute,
+  DecisionsIndexRoute: DecisionsIndexRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport

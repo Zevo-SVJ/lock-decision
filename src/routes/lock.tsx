@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AnswerField } from "@/components/lock/AnswerField";
 import { ChoiceList } from "@/components/lock/ChoiceList";
@@ -12,6 +12,7 @@ import { Tradeoff } from "@/components/lock/Tradeoff";
 import { SlideToLock } from "@/components/SlideToLock";
 import { useLockJourney, OPENING } from "@/hooks/use-lock-journey";
 import { useViewportInset } from "@/hooks/use-viewport-inset";
+import { recordJourneyDecision } from "@/lib/decision-actions";
 import { clearInviteFromUrl, readInvite, type Invite } from "@/lib/lock-invite";
 import type { ShareFormat } from "@/lib/share-card";
 
@@ -39,6 +40,9 @@ function LockApp() {
   const [picked, setPicked] = useState<string | null>(null);
   const [invite, setInvite] = useState<Invite | null>(null);
   const [format, setFormat] = useState<ShareFormat>("story");
+  /** The record this journey left behind, once it has one. */
+  const [recordId, setRecordId] = useState<string | null>(null);
+  const recordedRef = useRef<string | null>(null);
 
   useViewportInset();
 
@@ -97,6 +101,31 @@ function LockApp() {
     [verdict],
   );
 
+  /*
+   * A locked decision joins the record. The journey does not produce rated
+   * options, so what it leaves is the statement and the reasoning behind it —
+   * which is exactly what the record shows for it later.
+   */
+  useEffect(() => {
+    if (phase !== "locked" || !seal || !decision) return;
+    if (recordedRef.current === seal.id) return;
+    recordedRef.current = seal.id;
+    try {
+      const kept = recordJourneyDecision({ decision, reason: synthesis, seal });
+      setRecordId(kept.id);
+    } catch (e) {
+      // Failing to keep it must never take the locked decision away from them.
+      console.error(e);
+    }
+  }, [decision, phase, seal, synthesis]);
+
+  useEffect(() => {
+    if (phase === "idle") {
+      recordedRef.current = null;
+      setRecordId(null);
+    }
+  }, [phase]);
+
   return (
     <>
       <div
@@ -115,6 +144,11 @@ function LockApp() {
               <button type="button" onClick={journey.back} className="chrome-back">
                 Back
               </button>
+            )}
+            {phase === "idle" && (
+              <Link to="/decisions" className="chrome-link">
+                Your decisions
+              </Link>
             )}
           </header>
 
@@ -274,9 +308,16 @@ function LockApp() {
             {phase === "locked" && seal && (
               <>
                 <ShareActions seal={seal} decision={decision} format={format} />
-                <button type="button" onClick={journey.reset} className="action-plain">
-                  Another decision
-                </button>
+                <div className="dock-row">
+                  <button type="button" onClick={journey.reset} className="action-plain">
+                    Another decision
+                  </button>
+                  {recordId && (
+                    <Link to="/decisions/$id" params={{ id: recordId }} className="action-plain">
+                      Keep it open
+                    </Link>
+                  )}
+                </div>
               </>
             )}
 
